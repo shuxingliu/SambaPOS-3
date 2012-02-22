@@ -168,11 +168,6 @@
         <!--COMMAND BUTTONS AREA-->
         <StackPanel Grid.Column="0" Grid.RowSpan="5" Grid.Row="0" VerticalAlignment="Top"
                      Width="80">
-            <FxButton:FlexButton Height="50" Margin="0,0,3,3" Command="{Binding SelectLocationCommand}"
-                         Visibility="{Binding IsLocationButtonVisible,Converter={StaticResource VisibilityConverter}}">
-                <TextBlock FontSize="16" FontWeight="Bold" TextAlignment="Center" TextWrapping="Wrap"
-                             Text="{Binding SelectLocationButtonCaption}" />
-            </FxButton:FlexButton>
             <FxButton:FlexButton Height="50" Margin="0,0,3,3" Command="{Binding SelectAccountCommand}"
                          Visibility="{Binding IsAccountButtonVisible,Converter={StaticResource VisibilityConverter}}">
                 <TextBlock FontSize="16" FontWeight="Bold" TextAlignment="Center" TextWrapping="Wrap"

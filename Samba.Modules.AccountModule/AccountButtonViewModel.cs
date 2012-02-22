@@ -3,48 +3,35 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using Samba.Domain.Models.Locations;
+using Samba.Domain.Models.Accounts;
 using Samba.Localization;
 using Samba.Presentation.Common;
 using Samba.Presentation.Common.Services;
 
-namespace Samba.Modules.LocationModule
+namespace Samba.Modules.AccountModule
 {
-    public class LocationScreenItemViewModel : ObservableObject, IDiagram
+    public class AccountButtonViewModel : ObservableObject, IDiagram
     {
-        private readonly bool _isTicketSelected;
-        private readonly bool _userPermittedToMerge;
         private readonly ICommand _actionCommand;
 
-        public LocationScreenItemViewModel(Location model, LocationScreen screen)
-            : this(model, screen, null, false, true)
+        public AccountButtonViewModel(AccountButton model, AccountScreen screen)
+            : this(model, screen, null)
         {
 
         }
 
-        public LocationScreenItemViewModel(Location model, LocationScreen screen, ICommand actionCommand, bool isTicketSelected, bool userPermittedToMerge)
+        public AccountButtonViewModel(AccountButton model, AccountScreen screen, ICommand actionCommand)
         {
+            _isEnabled = true;
             _actionCommand = actionCommand;
             _screen = screen;
-            _isTicketSelected = isTicketSelected;
-            _userPermittedToMerge = userPermittedToMerge;
             Model = model;
         }
 
-        private readonly LocationScreen _screen;
-
-        private Location _model;
+        private readonly AccountScreen _screen;
 
         [Browsable(false)]
-        public Location Model
-        {
-            get { return _model; }
-            set
-            {
-                _model = value;
-                UpdateButtonColor();
-            }
-        }
+        public AccountButton Model { get; set; }
 
         [LocalizedDisplayName(ResourceStrings.Location)]
         public string Name { get { return Model.Name; } }
@@ -144,17 +131,6 @@ namespace Samba.Modules.LocationModule
         public void EditProperties()
         {
             InteractionService.UserIntraction.EditProperties(this);
-        }
-
-        public void UpdateButtonColor()
-        {
-            IsEnabled = true;
-            if (_isTicketSelected && Model.IsTicketLocked) IsEnabled = false;
-            if (_isTicketSelected && Model.TicketId > 0 && !_userPermittedToMerge) IsEnabled = false;
-
-            ButtonColor = Model.TicketId == 0
-                ? _screen.LocationEmptyColor
-                : (Model.IsTicketLocked ? _screen.LocationLockedColor : _screen.LocationFullColor);
         }
     }
 }

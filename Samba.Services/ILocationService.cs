@@ -1,16 +1,13 @@
 ﻿using System.Collections.Generic;
-using Samba.Domain.Models.Locations;
+using Samba.Domain.Models.Accounts;
 using Samba.Services.Common;
 
 namespace Samba.Services
 {
     public interface ILocationService : IService
     {
-        void UpdateLocations(LocationScreen locationScreen, int pageNo);
-        IEnumerable<Location> GetCurrentLocations(LocationScreen locationScreen, int currentPageNo);
-        IList<Location> LoadLocations(string selectedLocationScreen);
-        int GetLocationCount();
+        IEnumerable<AccountButton> GetCurrentLocations(AccountScreen locationScreen, int currentPageNo);
+        IList<AccountButton> LoadLocations(string selectedLocationScreen);
         void SaveLocations();
-        IEnumerable<string> GetCategories();
     }
 }

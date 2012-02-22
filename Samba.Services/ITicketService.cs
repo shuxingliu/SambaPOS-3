@@ -70,7 +70,6 @@ namespace Samba.Services
         TicketCommitResult CloseTicket(Ticket ticket);
         TicketCommitResult MoveOrders(Ticket ticket, IEnumerable<Order> selectedOrders, int targetTicketId);
 
-        void ChangeTicketLocation(Ticket ticket, int locationId);
         void AddPayment(Ticket ticket, PaymentTemplate template, decimal tenderedAmount);
         void PaySelectedTicket(Ticket ticket, PaymentTemplate template);
         void UpdateTicketNumber(Ticket ticket, Numerator numerator);
@@ -78,7 +77,6 @@ namespace Samba.Services
         void RecalculateTicket(Ticket ticket);
         void RegenerateTaxRates(Ticket ticket);
         void UpdateTag(Ticket ticket, TicketTagGroup tagGroup, TicketTag ticketTag);
-        void ResetLocationData(Ticket ticket);
         IEnumerable<Order> ExtractSelectedOrders(Ticket model, IEnumerable<Order> selectedOrders);
         int GetOpenTicketCount();
         IEnumerable<OpenTicketData> GetOpenTickets(Expression<Func<Ticket, bool>> prediction);

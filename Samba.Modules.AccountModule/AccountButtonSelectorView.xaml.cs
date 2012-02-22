@@ -3,17 +3,17 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace Samba.Modules.LocationModule
+namespace Samba.Modules.AccountModule
 {
     /// <summary>
     /// Interaction logic for LocationSelectorView.xaml
     /// </summary>
 
     [Export]
-    public partial class LocationSelectorView : UserControl
+    public partial class AccountButtonSelectorView : UserControl
     {
         [ImportingConstructor]
-        public LocationSelectorView(LocationSelectorViewModel viewModel)
+        public AccountButtonSelectorView(AccountButtonSelectorViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -26,14 +26,14 @@ namespace Samba.Modules.LocationModule
                 brd.BorderBrush = Brushes.Red;
                 miDesignMode.IsChecked = true;
                 DiagramCanvas.EditingMode = InkCanvasEditingMode.Select;
-                ((LocationSelectorViewModel)DataContext).LoadTrackableLocations();
+                ((AccountButtonSelectorViewModel)DataContext).LoadTrackableLocations();
             }
             else
             {
                 brd.BorderBrush = Brushes.Silver;
                 miDesignMode.IsChecked = false;
                 DiagramCanvas.EditingMode = InkCanvasEditingMode.None;
-                ((LocationSelectorViewModel)DataContext).SaveTrackableLocations();
+                ((AccountButtonSelectorViewModel)DataContext).SaveTrackableLocations();
             }
         }
     }

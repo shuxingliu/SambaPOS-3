@@ -23,11 +23,12 @@
 
     public static class EventTopicNames
     {
+        public const string SelectAccountState = "Select Account State";
         public const string AccountTransactionDocumentSelected = "Account Transaction Document Selected";
-        public const string EditAccountDetails="Edit Account Details";
-        public const string DisplayAccountTransactions="Display Account Transactions";
-        public const string SelectedAccountChanged="Selected Account Changed";
-        public const string AddCustomTicketCommand="Add Custom Ticket Command";
+        public const string EditAccountDetails = "Edit Account Details";
+        public const string DisplayAccountTransactions = "Display Account Transactions";
+        public const string SelectedAccountChanged = "Selected Account Changed";
+        public const string AddCustomTicketCommand = "Add Custom Ticket Command";
         public const string AddCustomOrderCommand = "Add Custom Order Command";
         public const string TicketClosed = "Ticket Closed";
         public const string ActivateTicket = "ActivateTicket";
@@ -74,7 +75,6 @@
         public const string PaymentSubmitted = "Payment Submitted";
         public const string SelectedOrdersChanged = "Selected Orders Changed";
         public const string SelectedDepartmentChanged = "Selected Department Changed";
-        public const string SelectLocation = "Select Location";
         public const string FindLocation = "Find Location";
         public const string ActivatePosView = "Activate POS View";
         public const string RefreshSelectedTicket = "Refresh Selected Ticket";

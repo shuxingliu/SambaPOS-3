@@ -179,5 +179,18 @@ namespace Samba.Persistance.Data
                 return workspace.Last<T>(recordCount).OrderBy(x => x.Id);
             }
         }
+
+        public static int CountOf<TB, TD>() where TB : class
+        {
+            using (var workspace = WorkspaceFactory.CreateReadOnly())
+            {
+                return workspace.Queryable<TB>().OfType<TD>().Count();
+            }
+        }
+
+        public static IQueryable<T> AsQueryable<T>() where T : class
+        {
+            return WorkspaceFactory.CreateReadOnly().Queryable<T>();
+        }
     }
 }

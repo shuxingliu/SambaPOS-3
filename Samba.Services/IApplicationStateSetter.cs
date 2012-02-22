@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Samba.Domain.Models.Locations;
+using Samba.Domain.Models.Accounts;
 using Samba.Domain.Models.Tickets;
 using Samba.Domain.Models.Users;
 
@@ -12,7 +12,7 @@ namespace Samba.Services
         //void SetCurrentDepartment(Department department);
         void SetCurrentDepartment(int departmentId);
         void SetCurrentApplicationScreen(AppScreens appScreen);
-        void SetSelectedLocationScreen(LocationScreen locationScreen);
+        void SetSelectedLocationScreen(AccountScreen locationScreen);
         void ResetWorkPeriods();
     }
 }

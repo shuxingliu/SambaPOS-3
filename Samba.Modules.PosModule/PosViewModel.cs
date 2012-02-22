@@ -124,7 +124,7 @@ namespace Samba.Modules.PosModule
 
             if (_applicationState.CurrentDepartment.IsAlaCarte && _applicationState.CurrentDepartment.LocationScreens.Count > 0)
             {
-                _applicationState.CurrentDepartment.PublishEvent(EventTopicNames.SelectLocation);
+                _applicationState.CurrentDepartment.PublishEvent(EventTopicNames.SelectAccountState);
             }
             else if (_applicationState.CurrentDepartment.IsTakeAway)
             {

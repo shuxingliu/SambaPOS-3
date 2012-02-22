@@ -54,6 +54,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccountButtonSelectorView.xaml.cs">
+      <DependentUpon>AccountButtonSelectorView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AccountButtonSelectorViewModel.cs" />
+    <Compile Include="AccountButtonViewModel.cs" />
     <Compile Include="AccountDetailViewModel.cs" />
     <Compile Include="AccountEditorView.xaml.cs">
       <DependentUpon>AccountEditorView.xaml</DependentUpon>
@@ -70,6 +75,10 @@
     <Compile Include="AccountSummaryViewModel.cs" />
     <Compile Include="Dashboard\AccountCustomFieldViewModel.cs" />
     <Compile Include="AccountModule.cs" />
+    <Compile Include="Dashboard\AccountScreenView.xaml.cs">
+      <DependentUpon>AccountScreenView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dashboard\AccountScreenViewModel.cs" />
     <Compile Include="Dashboard\AccountTransactionDocumentTemplateView.xaml.cs">
       <DependentUpon>AccountTransactionDocumentTemplateView.xaml</DependentUpon>
     </Compile>
@@ -91,10 +100,6 @@
       <DependentUpon>AccountTemplateView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dashboard\AccountTemplateViewModel.cs" />
-    <Compile Include="DeliveryView.xaml.cs">
-      <DependentUpon>DeliveryView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="DeliveryViewModel.cs" />
     <Compile Include="DocumentCreationData.cs" />
     <Compile Include="DocumentCreatorView.xaml.cs">
       <DependentUpon>DocumentCreatorView.xaml</DependentUpon>
@@ -104,6 +109,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="AccountButtonSelectorView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="AccountEditorView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -113,6 +122,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="AccountDetailsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Dashboard\AccountScreenView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -135,10 +148,6 @@
     <Page Include="Dashboard\AccountTemplateView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="DeliveryView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="DocumentCreatorView.xaml">
       <SubType>Designer</SubType>
@@ -191,6 +200,7 @@
       <Name>Samba.Services</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>IF NOT "$(ConfigurationName)"=="Release" GOTO End

@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using Samba.Infrastructure.Data;
 
-namespace Samba.Domain.Models.Locations
+namespace Samba.Domain.Models.Accounts
 {
-    public class LocationScreen : Entity, IOrderable
+    public class AccountScreen : Entity, IOrderable
     {
         public int Order { get; set; }
         public int DisplayMode { get; set; }
@@ -18,11 +18,11 @@ namespace Samba.Domain.Models.Locations
         public int NumeratorHeight { get; set; }
         public string AlphaButtonValues { get; set; }
 
-        private IList<Location> _locations;
-        public virtual IList<Location> Locations
+        private IList<AccountButton> _states;
+        public virtual IList<AccountButton> States
         {
-            get { return _locations; }
-            set { _locations = value; }
+            get { return _states; }
+            set { _states = value; }
         }
 
         public string UserString
@@ -32,9 +32,9 @@ namespace Samba.Domain.Models.Locations
 
         public bool IsBackgroundImageVisible { get { return !string.IsNullOrEmpty(BackgroundImage); } }
 
-        public LocationScreen()
+        public AccountScreen()
         {
-            _locations = new List<Location>();
+            _states = new List<AccountButton>();
             LocationEmptyColor = "WhiteSmoke";
             LocationFullColor = "Orange";
             LocationLockedColor = "Brown";
@@ -47,16 +47,16 @@ namespace Samba.Domain.Models.Locations
         {
             get
             {
-                var itemCount = Locations.Count / PageCount;
-                if (Locations.Count % PageCount > 0) itemCount++;
+                var itemCount = States.Count / PageCount;
+                if (States.Count % PageCount > 0) itemCount++;
                 return itemCount;
             }
         }
 
-        public void AddScreenItem(Location choosenValue)
+        public void AddScreenItem(AccountButton choosenValue)
         {
-            if (!Locations.Contains(choosenValue))
-                Locations.Add(choosenValue);
+            if (!States.Contains(choosenValue))
+                States.Add(choosenValue);
         }
     }
 }

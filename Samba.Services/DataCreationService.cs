@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using Samba.Domain.Models.Accounts;
 using Samba.Domain.Models.Actions;
-using Samba.Domain.Models.Locations;
 using Samba.Domain.Models.Menus;
 using Samba.Domain.Models.Settings;
 using Samba.Domain.Models.Tickets;
@@ -37,15 +36,17 @@ namespace Samba.Services
 
             if (!ShouldCreateData()) return;
 
-            var saleAccountTemplate = new AccountTemplate { Name = "Sales Accounts" };
-            var paymentAccountTemplate = new AccountTemplate { Name = "Payment Accounts" };
-            var customerAccountTemplate = new AccountTemplate { Name = "Customer Accounts" };
-            var discountAccountTemplate = new AccountTemplate { Name = "Discount Accounts" };
+            var saleAccountTemplate = new AccountTemplate { Name = "Sale" };
+            var paymentAccountTemplate = new AccountTemplate { Name = "Payment" };
+            var customerAccountTemplate = new AccountTemplate { Name = "Customer" };
+            var discountAccountTemplate = new AccountTemplate { Name = "Discount" };
+            var locationAccountTemplate = new AccountTemplate { Name = Resources.Location };
 
             _workspace.Add(saleAccountTemplate);
             _workspace.Add(paymentAccountTemplate);
             _workspace.Add(customerAccountTemplate);
             _workspace.Add(discountAccountTemplate);
+            _workspace.Add(locationAccountTemplate);
 
             _workspace.CommitChanges();
 
@@ -306,7 +307,7 @@ namespace Samba.Services
             _workspace.Add(rule);
 
             ImportMenus(screen);
-            ImportLocations(department);
+            ImportLocations(department,locationAccountTemplate.Id);
 
             ImportItems(BatchCreateAccounts);
             ImportItems(BatchCreateTransactionTemplates);
@@ -315,21 +316,7 @@ namespace Samba.Services
             _workspace.CommitChanges();
             _workspace.Dispose();
         }
-
-        //private void ImportAccounts()
-        //{
-        //    var fileName = string.Format("{0}/Imports/account{1}.txt", LocalSettings.AppPath, "_" + LocalSettings.CurrentLanguage);
-        //    if (!File.Exists(fileName))
-        //        fileName = string.Format("{0}/Imports/account.txt", LocalSettings.AppPath);
-
-        //    if (!File.Exists(fileName)) return;
-
-        //    var lines = File.ReadAllLines(fileName);
-        //    var items = BatchCreateAccounts(lines, _workspace);
-        //    items.ToList().ForEach(_workspace.Add);
-        //    _workspace.CommitChanges();
-        //}
-
+        
         private void ImportItems<T>(Func<string[], IWorkspace, IEnumerable<T>> func) where T : class
         {
             var fileName = string.Format("{0}\\Imports\\" + typeof(T).Name.ToLower() + "{1}.txt", LocalSettings.AppPath, "_" + LocalSettings.CurrentLanguage);
@@ -342,7 +329,7 @@ namespace Samba.Services
             _workspace.CommitChanges();
         }
 
-        private void ImportLocations(Department department)
+        private void ImportLocations(Department department, int locationAccountTemplateId)
         {
             var fileName = string.Format("{0}/Imports/table{1}.txt", LocalSettings.AppPath, "_" + LocalSettings.CurrentLanguage);
 
@@ -353,11 +340,14 @@ namespace Samba.Services
 
             var lines = File.ReadAllLines(fileName);
             var items = BatchCreateLocations(lines, _workspace);
+            foreach (var location in items)
+            {
+                location.Account = new Account { Name = location.Name, AccountTemplateId = locationAccountTemplateId }; ;
+            }
             items.ToList().ForEach(_workspace.Add);
-
             _workspace.CommitChanges();
 
-            var screen = new LocationScreen { Name = Resources.AllLocations, ColumnCount = 8 };
+            var screen = new AccountScreen { Name = Resources.AllLocations, ColumnCount = 8 };
             _workspace.Add(screen);
 
             foreach (var location in items)
@@ -392,9 +382,9 @@ namespace Samba.Services
             }
         }
 
-        public IEnumerable<Location> BatchCreateLocations(string[] values, IWorkspace workspace)
+        public IEnumerable<AccountButton> BatchCreateLocations(string[] values, IWorkspace workspace)
         {
-            IList<Location> result = new List<Location>();
+            IList<AccountButton> result = new List<AccountButton>();
             if (values.Length > 0)
             {
                 var currentCategory = Resources.Common;
@@ -407,10 +397,10 @@ namespace Samba.Services
                     else
                     {
                         var locationName = value;
-                        var count = Dao.Count<Location>(y => y.Name == locationName.Trim());
+                        var count = Dao.Count<AccountButton>(y => y.Name == locationName.Trim());
                         if (count == 0)
                         {
-                            var location = new Location { Name = value.Trim(), Category = currentCategory };
+                            var location = new AccountButton { Name = value.Trim(), Category = currentCategory };
                             if (result.Count(x => x.Name.ToLower() == location.Name.ToLower()) == 0)
                             {
                                 result.Add(location);

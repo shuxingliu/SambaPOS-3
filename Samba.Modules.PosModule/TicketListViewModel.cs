@@ -27,7 +27,6 @@ namespace Samba.Modules.PosModule
         private readonly ITicketService _ticketService;
         private readonly IPrinterService _printerService;
         private readonly IAccountService _accountService;
-        private readonly ILocationService _locationService;
         private readonly IUserService _userService;
         private readonly IApplicationState _applicationState;
         private readonly IApplicationStateSetter _applicationStateSetter;
@@ -40,7 +39,6 @@ namespace Samba.Modules.PosModule
         public CaptionCommand<string> MakePaymentCommand { get; set; }
 
         public CaptionCommand<PaymentTemplate> MakeFastPaymentCommand { get; set; }
-        public CaptionCommand<string> SelectLocationCommand { get; set; }
         public CaptionCommand<string> SelectAccountCommand { get; set; }
         public CaptionCommand<string> PrintTicketCommand { get; set; }
         public CaptionCommand<string> PrintInvoiceCommand { get; set; }
@@ -140,12 +138,10 @@ namespace Samba.Modules.PosModule
             get
             {
                 return
-                ((_locationService.GetLocationCount() > 0 ||
-                    (_applicationState.CurrentDepartment != null
-                    && _applicationState.CurrentDepartment.IsAlaCarte))
-                    && IsNothingSelected) &&
-                    ((_applicationState.CurrentDepartment != null &&
-                    _applicationState.CurrentDepartment.LocationScreens.Count > 0));
+                    _applicationState.CurrentDepartment != null
+                      && _applicationState.CurrentDepartment.LocationScreens.Count > 0
+                      && _applicationState.CurrentDepartment.IsAlaCarte
+                     && IsNothingSelected;
             }
         }
 
@@ -191,13 +187,12 @@ namespace Samba.Modules.PosModule
         [ImportingConstructor]
         public TicketListViewModel(IApplicationState applicationState, IApplicationStateSetter applicationStateSetter,
             ITicketService ticketService, IAccountService accountService, IPrinterService printerService,
-            ILocationService locationService, IUserService userService, IAutomationService automationService,
+            IUserService userService, IAutomationService automationService,
             ICacheService cacheService, TicketOrdersViewModel ticketOrdersViewModel)
         {
             _printerService = printerService;
             _ticketService = ticketService;
             _accountService = accountService;
-            _locationService = locationService;
             _userService = userService;
             _applicationState = applicationState;
             _applicationStateSetter = applicationStateSetter;
@@ -214,7 +209,6 @@ namespace Samba.Modules.PosModule
             CloseTicketCommand = new CaptionCommand<string>(Resources.CloseTicket_r, OnCloseTicketExecute, CanCloseTicket);
             MakePaymentCommand = new CaptionCommand<string>(Resources.Settle, OnMakePaymentExecute, CanMakePayment);
             MakeFastPaymentCommand = new CaptionCommand<PaymentTemplate>("[FastPayment]", OnMakeFastPaymentExecute, CanMakeFastPayment);
-            SelectLocationCommand = new CaptionCommand<string>(Resources.SelectLocation, OnSelectLocationExecute, CanSelectLocation);
             SelectAccountCommand = new CaptionCommand<string>(Resources.SelectAccount, OnSelectAccountExecute, CanSelectAccount);
             ShowAllOpenTickets = new CaptionCommand<string>(Resources.AllTickets_r, OnShowAllOpenTickets);
 
@@ -233,7 +227,6 @@ namespace Samba.Modules.PosModule
             PaymentButtonGroup = new PaymentButtonGroupViewModel(MakeFastPaymentCommand, MakePaymentCommand, CloseTicketCommand);
 
             EventServiceFactory.EventService.GetEvent<GenericEvent<ScreenMenuItemData>>().Subscribe(OnMenuItemSelected);
-            EventServiceFactory.EventService.GetEvent<GenericEvent<LocationData>>().Subscribe(OnLocationSelected);
             EventServiceFactory.EventService.GetEvent<GenericEvent<OrderViewModel>>().Subscribe(OnSelectedOrdersChanged);
             EventServiceFactory.EventService.GetEvent<GenericEvent<TicketTagData>>().Subscribe(OnTagSelected);
             EventServiceFactory.EventService.GetEvent<GenericEvent<Account>>().Subscribe(OnAccountSelectedForTicket);
@@ -418,52 +411,6 @@ namespace Samba.Modules.PosModule
             if (obj.Topic == EventTopicNames.ScreenMenuItemDataSelected) AddMenuItemCommand.Execute(obj.Value);
         }
 
-        private void OnLocationSelected(EventParameters<LocationData> obj)
-        {
-            if (obj.Topic == EventTopicNames.LocationSelectedForTicket)
-            {
-                if (SelectedTicket != null)
-                {
-                    var oldLocationName = SelectedTicket.Location;
-                    var ticketsMerged = obj.Value.TicketId > 0 && obj.Value.TicketId != SelectedTicket.Id;
-
-                    _ticketService.ChangeTicketLocation(SelectedTicket.Model, obj.Value.LocationId);
-                    CloseTicket();
-
-                    if (!_applicationState.CurrentTerminal.AutoLogout)
-                        EventServiceFactory.EventService.PublishEvent(EventTopicNames.ActivatePosView);
-
-                    if (!string.IsNullOrEmpty(oldLocationName) || ticketsMerged)
-                        if (ticketsMerged && !string.IsNullOrEmpty(oldLocationName))
-                            InteractionService.UserIntraction.GiveFeedback(string.Format(Resources.LocationsMerged_f, oldLocationName, obj.Value.Caption));
-                        else if (ticketsMerged)
-                            InteractionService.UserIntraction.GiveFeedback(string.Format(Resources.TicketMergedToLocation_f, obj.Value.Caption));
-                        else if (oldLocationName != obj.Value.LocationName)
-                            InteractionService.UserIntraction.GiveFeedback(string.Format(Resources.TicketMovedToLocation_f, oldLocationName, obj.Value.Caption));
-                }
-                else
-                {
-                    if (obj.Value.TicketId == 0)
-                    {
-                        _ticketService.OpenTicket(0);
-                        if (SelectedTicket != null)
-                        {
-                            _ticketService.ChangeTicketLocation(SelectedTicket.Model, obj.Value.LocationId);
-                        }
-                    }
-                    else
-                    {
-                        _ticketService.OpenTicket(obj.Value.TicketId);
-                        if (SelectedTicket != null)
-                        {
-                            if (SelectedTicket.Location != obj.Value.LocationName)
-                                _ticketService.ResetLocationData(_applicationState.CurrentTicket);
-                        }
-                    }
-                    EventServiceFactory.EventService.PublishEvent(EventTopicNames.ActivatePosView);
-                }
-            }
-        }
 
         private bool CanExecuteShowTicketTags(TicketTagGroup arg)
         {
@@ -727,11 +674,6 @@ namespace Samba.Modules.PosModule
                 return string.IsNullOrEmpty(SelectedTicket.Location) || _userService.IsUserPermittedFor(PermissionNames.ChangeLocation);
             }
             return SelectedTicket == null;
-        }
-
-        private void OnSelectLocationExecute(string obj)
-        {
-            SelectedDepartment.PublishEvent(EventTopicNames.SelectLocation);
         }
 
         public string SelectLocationButtonCaption

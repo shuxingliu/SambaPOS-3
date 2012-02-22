@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using Samba.Domain.Models.Accounts;
-using Samba.Domain.Models.Locations;
 using Samba.Domain.Models.Settings;
 using Samba.Domain.Models.Tickets;
 using Samba.Infrastructure.Data;
@@ -94,15 +93,15 @@ namespace Samba.Services.Implementations.TicketModule
 
         public Ticket OpenTicketByLocationName(string locationName)
         {
-            var location = Dao.SingleWithCache<Location>(x => x.Name == locationName);
-            if (location != null)
-            {
-                var ticket = _applicationState.CurrentTicket;
-                if (location.TicketId > 0)
-                    ticket = OpenTicket(location.TicketId);
-                ChangeTicketLocation(ticket, location.Id);
-                return ticket;
-            }
+            //var location = Dao.SingleWithCache<Location>(x => x.Name == locationName);
+            //if (location != null)
+            //{
+            //    var ticket = _applicationState.CurrentTicket;
+            //    if (location.TicketId > 0)
+            //        ticket = OpenTicket(location.TicketId);
+            //    ChangeTicketLocation(ticket, location.Id);
+            //    return ticket;
+            //}
             return null;
         }
 
@@ -161,17 +160,17 @@ namespace Samba.Services.Implementations.TicketModule
                 }
             }
 
-            if (!string.IsNullOrEmpty(ticket.LocationName) && ticket.Id == 0)
-            {
-                var ticketId = Dao.Select<Location, int>(x => x.TicketId, x => x.Name == ticket.LocationName).FirstOrDefault();
-                {
-                    if (ticketId > 0)
-                    {
-                        result.ErrorMessage = string.Format(Resources.LocationChangedRetryLastOperation_f, ticket.LocationName);
-                        changed = true;
-                    }
-                }
-            }
+            //if (!string.IsNullOrEmpty(ticket.LocationName) && ticket.Id == 0)
+            //{
+            //    var ticketId = Dao.Select<Location, int>(x => x.TicketId, x => x.Name == ticket.LocationName).FirstOrDefault();
+            //    {
+            //        if (ticketId > 0)
+            //        {
+            //            result.ErrorMessage = string.Format(Resources.LocationChangedRetryLastOperation_f, ticket.LocationName);
+            //            changed = true;
+            //        }
+            //    }
+            //}
 
             var canSumbitTicket = !changed && ticket.CanSubmit; // Fişi kaydedebilmek için gün sonu yapılmamış ve fişin ödenmemiş olması gerekir.
 
@@ -239,54 +238,54 @@ namespace Samba.Services.Implementations.TicketModule
 
         private void UpdateTicketLocation(Ticket ticket)
         {
-            if (string.IsNullOrEmpty(ticket.LocationName)) return;
-            var location = _workspace.Single<Location>(x => x.Name == ticket.LocationName);
-            if (location != null)
-            {
-                if (ticket.IsPaid || ticket.Orders.Count == 0)
-                {
-                    if (location.TicketId == ticket.Id)
-                    {
-                        location.Reset();
-                    }
-                }
-                else
-                {
-                    location.TicketId = ticket.Id;
-                    location.IsTicketLocked = ticket.Locked;
-                }
-            }
-            else ticket.LocationName = "";
+            //if (string.IsNullOrEmpty(ticket.LocationName)) return;
+            //var location = _workspace.Single<Location>(x => x.Name == ticket.LocationName);
+            //if (location != null)
+            //{
+            //    if (ticket.IsPaid || ticket.Orders.Count == 0)
+            //    {
+            //        if (location.TicketId == ticket.Id)
+            //        {
+            //            location.Reset();
+            //        }
+            //    }
+            //    else
+            //    {
+            //        location.TicketId = ticket.Id;
+            //        location.IsTicketLocked = ticket.Locked;
+            //    }
+            //}
+            //else ticket.LocationName = "";
         }
 
         public void ChangeTicketLocation(Ticket ticket, int locationId)
         {
-            Debug.Assert(ticket != null);
+        //    Debug.Assert(ticket != null);
 
-            var location = _workspace.Single<Location>(x => x.Id == locationId);
-            var oldLocation = "";
+        //    var location = _workspace.Single<Location>(x => x.Id == locationId);
+        //    var oldLocation = "";
 
-            if (!string.IsNullOrEmpty(ticket.LocationName))
-            {
-                oldLocation = ticket.LocationName;
-                var oldLoc = _workspace.Single<Location>(x => x.Name == oldLocation);
-                if (oldLoc.TicketId == ticket.Id)
-                {
-                    oldLoc.Reset();
-                }
-            }
+        //    if (!string.IsNullOrEmpty(ticket.LocationName))
+        //    {
+        //        oldLocation = ticket.LocationName;
+        //        var oldLoc = _workspace.Single<Location>(x => x.Name == oldLocation);
+        //        if (oldLoc.TicketId == ticket.Id)
+        //        {
+        //            oldLoc.Reset();
+        //        }
+        //    }
 
-            if (location.TicketId > 0 && location.TicketId != ticket.Id)
-            {
-                MoveOrders(ticket, ticket.Orders.ToList(), location.TicketId);
-                ticket = OpenTicket(location.TicketId);
-            }
+        //    if (location.TicketId > 0 && location.TicketId != ticket.Id)
+        //    {
+        //        MoveOrders(ticket, ticket.Orders.ToList(), location.TicketId);
+        //        ticket = OpenTicket(location.TicketId);
+        //    }
 
-            ticket.LocationName = location.Name;
-            if (_applicationState.CurrentDepartment != null) ticket.DepartmentId = _applicationState.CurrentDepartment.Id;
-            location.TicketId = ticket.GetRemainingAmount() > 0 ? ticket.Id : 0;
+        //    ticket.LocationName = location.Name;
+        //    if (_applicationState.CurrentDepartment != null) ticket.DepartmentId = _applicationState.CurrentDepartment.Id;
+        //    location.TicketId = ticket.GetRemainingAmount() > 0 ? ticket.Id : 0;
 
-            _automationService.NotifyEvent(RuleEventNames.TicketLocationChanged, new { Ticket = ticket, OldLocation = oldLocation, NewLocation = ticket.LocationName });
+        //    _automationService.NotifyEvent(RuleEventNames.TicketLocationChanged, new { Ticket = ticket, OldLocation = oldLocation, NewLocation = ticket.LocationName });
         }
 
         //public Account CheckAccount(Account account)
@@ -427,15 +426,15 @@ namespace Samba.Services.Implementations.TicketModule
 
         public void ResetLocationData(Ticket ticket)
         {
-            _workspace.All<Location>(x => x.TicketId == ticket.Id).ToList().ForEach(x => x.Reset());
-            UpdateTicketLocation(ticket);
-            Debug.Assert(_workspace != null);
-            Debug.Assert(ticket != null);
-            Debug.Assert(ticket.Id > 0 || ticket.Orders.Count > 0);
-            if (ticket.Id == 0 && ticket.TicketNumber != null)
-                _workspace.Add(ticket);
-            ticket.LastUpdateTime = DateTime.Now;
-            _workspace.CommitChanges();
+            //_workspace.All<Location>(x => x.AccountId == ticket.AccountId).ToList().ForEach(x => x.Reset());
+            //UpdateTicketLocation(ticket);
+            //Debug.Assert(_workspace != null);
+            //Debug.Assert(ticket != null);
+            //Debug.Assert(ticket.Id > 0 || ticket.Orders.Count > 0);
+            //if (ticket.Id == 0 && ticket.TicketNumber != null)
+            //    _workspace.Add(ticket);
+            //ticket.LastUpdateTime = DateTime.Now;
+            //_workspace.CommitChanges();
         }
 
         public int GetOpenTicketCount()

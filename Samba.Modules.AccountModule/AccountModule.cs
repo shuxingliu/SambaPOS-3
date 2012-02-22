@@ -23,37 +23,40 @@ namespace Samba.Modules.AccountModule
         private readonly IApplicationStateSetter _applicationStateSetter;
         private readonly AccountSelectorView _accountSelectorView;
         private readonly AccountEditorView _accountEditorView;
-        private readonly DeliveryView _deliveryView;
         private readonly AccountDetailsView _accountDetailsView;
         private readonly DocumentCreatorView _documentCreatorView;
+        private readonly AccountButtonSelectorView _accountStateSelectorView;
 
         [ImportingConstructor]
         public AccountModule(IRegionManager regionManager, IUserService userService,
             IApplicationStateSetter applicationStateSetter,
-            DeliveryView deliveryView,
             AccountSelectorView accountSelectorView,
             AccountEditorView accountEditorView,
             AccountDetailsView accountDetailsView,
-            DocumentCreatorView documentCreatorView)
+            DocumentCreatorView documentCreatorView,
+            AccountButtonSelectorView accountStateSelectorView)
             : base(regionManager, AppScreens.AccountView)
         {
             _userService = userService;
             _regionManager = regionManager;
             _accountSelectorView = accountSelectorView;
-            _deliveryView = deliveryView;
             _accountDetailsView = accountDetailsView;
             _accountEditorView = accountEditorView;
             _documentCreatorView = documentCreatorView;
             _applicationStateSetter = applicationStateSetter;
+            _accountStateSelectorView = accountStateSelectorView;
 
             AddDashboardCommand<EntityCollectionViewModelBase<AccountTemplateViewModel, AccountTemplate>>(Resources.AccountTemplateList, Resources.Accounts, 40);
             AddDashboardCommand<EntityCollectionViewModelBase<AccountViewModel, Account>>(Resources.AccountList, Resources.Accounts, 40);
             AddDashboardCommand<EntityCollectionViewModelBase<AccountTransactionTemplateViewModel, AccountTransactionTemplate>>(string.Format(Resources.List_f, "Transaction Template"), Resources.Accounts, 40);
             AddDashboardCommand<EntityCollectionViewModelBase<AccountTransactionDocumentViewModel, AccountTransactionDocument>>(string.Format(Resources.List_f, "Transaction Document"), Resources.Accounts, 40);
             AddDashboardCommand<EntityCollectionViewModelBase<AccountTransactionDocumentTemplateViewModel, AccountTransactionDocumentTemplate>>(string.Format(Resources.List_f, "Document Template"), Resources.Accounts, 40);
+            AddDashboardCommand<EntityCollectionViewModelBase<AccountScreenViewModel, AccountScreen>>(Resources.LocationViews, Resources.Locations);
 
             PermissionRegistry.RegisterPermission(PermissionNames.MakeAccountTransaction, PermissionCategories.Cash, Resources.CanMakeAccountTransaction);
             PermissionRegistry.RegisterPermission(PermissionNames.CreditOrDeptAccount, PermissionCategories.Cash, Resources.CanMakeCreditOrDeptTransaction);
+            PermissionRegistry.RegisterPermission(PermissionNames.OpenLocations, PermissionCategories.Navigation, Resources.CanOpenLocationList);
+            PermissionRegistry.RegisterPermission(PermissionNames.ChangeLocation, PermissionCategories.Ticket, Resources.CanChangeLocation);
 
             SetNavigationCommand(Resources.Accounts, Resources.Common, "Images/Xls.png", 70);
             PermissionRegistry.RegisterPermission(PermissionNames.NavigateAccountView, PermissionCategories.Navigation, Resources.CanNavigateCash);
@@ -61,11 +64,19 @@ namespace Samba.Modules.AccountModule
 
         protected override void OnInitialization()
         {
-            _regionManager.RegisterViewWithRegion(RegionNames.MainRegion, typeof(DeliveryView));
             _regionManager.RegisterViewWithRegion(RegionNames.MainRegion, typeof(AccountDetailsView));
-            _regionManager.RegisterViewWithRegion(RegionNames.AccountDisplayRegion, typeof(AccountSelectorView));
-            _regionManager.RegisterViewWithRegion(RegionNames.AccountDisplayRegion, typeof(AccountEditorView));
-            _regionManager.RegisterViewWithRegion(RegionNames.AccountDisplayRegion, typeof(DocumentCreatorView));
+            _regionManager.RegisterViewWithRegion(RegionNames.MainRegion, typeof(AccountSelectorView));
+            _regionManager.RegisterViewWithRegion(RegionNames.MainRegion, typeof(AccountEditorView));
+            _regionManager.RegisterViewWithRegion(RegionNames.MainRegion, typeof(DocumentCreatorView));
+            _regionManager.RegisterViewWithRegion(RegionNames.MainRegion, typeof(AccountButtonSelectorView));
+
+            EventServiceFactory.EventService.GetEvent<GenericEvent<Department>>().Subscribe(x =>
+            {
+                if (x.Topic == EventTopicNames.SelectAccountState)
+                {
+                    ActivateLocationView();
+                }
+            });
 
             EventServiceFactory.EventService.GetEvent<GenericEvent<DocumentCreationData>>().Subscribe(x =>
                 {
@@ -101,21 +112,25 @@ namespace Samba.Modules.AccountModule
                     if (x.Topic == EventTopicNames.PopupClicked && x.Value.EventMessage == EventTopicNames.SelectAccount)
                     {
                         Activate();
-                        ((DeliveryViewModel)_accountSelectorView.DataContext).SearchAccount(x.Value.DataObject as string);
                     }
                 });
+        }
+
+        private void ActivateLocationView()
+        {
+            _regionManager.Regions[RegionNames.MainRegion].Activate(_accountStateSelectorView);
         }
 
         private void ActivateDocumentCreator()
         {
             Activate();
-            _regionManager.Regions[RegionNames.AccountDisplayRegion].Activate(_documentCreatorView);
+            _regionManager.Regions[RegionNames.MainRegion].Activate(_documentCreatorView);
         }
 
         private void ActivateAccountEditor()
         {
             Activate();
-            _regionManager.Regions[RegionNames.AccountDisplayRegion].Activate(_accountEditorView);
+            _regionManager.Regions[RegionNames.MainRegion].Activate(_accountEditorView);
         }
 
         private void ActivateCustomerTransactions()
@@ -127,7 +142,7 @@ namespace Samba.Modules.AccountModule
         {
             Activate();
             ((AccountSelectorViewModel)_accountSelectorView.DataContext).RefreshSelectedAccount();
-            _regionManager.Regions[RegionNames.AccountDisplayRegion].Activate(_accountSelectorView);
+            _regionManager.Regions[RegionNames.MainRegion].Activate(_accountSelectorView);
         }
 
         protected override bool CanNavigate(string arg)
@@ -144,7 +159,7 @@ namespace Samba.Modules.AccountModule
 
         public override object GetVisibleView()
         {
-            return _deliveryView;
+            return _accountSelectorView;
         }
     }
 }

@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:ListViewLM="clr-namespace:Samba.Presentation.Common.ListViewLM;assembly=Samba.Presentation.Common" 
              xmlns:ListViewEx="clr-namespace:Samba.Presentation.Common.ListViewEx;assembly=Samba.Presentation.Common" xmlns:FlexButton="clr-namespace:FlexButton;assembly=FlexButton" xmlns:VirtualKeyboard="clr-namespace:Samba.Presentation.Common.VirtualKeyboard;assembly=Samba.Presentation.Common" mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="300" d:DesignWidth="300" FontSize="20">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="9*" />
