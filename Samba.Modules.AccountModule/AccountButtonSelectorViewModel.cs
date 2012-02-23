@@ -139,7 +139,7 @@ namespace Samba.Modules.AccountModule
             //                       Caption = obj.Caption
             //                   };
             //location.PublishEvent(EventTopicNames.LocationSelectedForTicket);
-            obj.Model.Account.PublishEvent(EventTopicNames.AccountSelectedForTicket);
+            obj.Model.Account.PublishEvent(EventTopicNames.DisplayAccountTickets);
         }
 
         private void UpdateLocations(AccountScreen locationScreen)

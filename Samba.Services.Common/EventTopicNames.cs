@@ -23,6 +23,7 @@
 
     public static class EventTopicNames
     {
+        public const string DisplayAccountTickets="Display Account Tickets";
         public const string SelectAccountState = "Select Account State";
         public const string AccountTransactionDocumentSelected = "Account Transaction Document Selected";
         public const string EditAccountDetails = "Edit Account Details";

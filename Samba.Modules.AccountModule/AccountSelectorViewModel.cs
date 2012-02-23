@@ -243,20 +243,28 @@ namespace Samba.Modules.AccountModule
         {
             if (_applicationState.CurrentDepartment != null)
             {
-                if (SelectedAccountTemplate == null || SelectedAccountTemplate.Id != _applicationState.CurrentDepartment.TicketTemplate.SaleTransactionTemplate.TargetAccountTemplateId)
-                    SelectedAccountTemplate = _cacheService.GetAccountTemplateById(
-                            _applicationState.CurrentDepartment.TicketTemplate.SaleTransactionTemplate.TargetAccountTemplateId);
-
-                ClearSearchValues();
+                Account account = null;
 
                 if (_applicationState.CurrentTicket != null && _applicationState.CurrentTicket.AccountId != _applicationState.CurrentDepartment.TicketTemplate.SaleTransactionTemplate.DefaultTargetAccountId)
                 {
-                    var account = Dao.SingleWithCache<Account>(x => x.Id == _applicationState.CurrentTicket.AccountId);
-                    if (account != null)
-                    {
-                        ClearSearchValues();
-                        FoundAccounts.Add(new AccountSearchViewModel(account, SelectedAccountTemplate));
-                    }
+                    account = Dao.SingleWithCache<Account>(x => x.Id == _applicationState.CurrentTicket.AccountId);
+                }
+
+                if (account != null)
+                {
+                    SelectedAccountTemplate = _cacheService.GetAccountTemplateById(account.AccountTemplateId);
+                }
+                else if (SelectedAccountTemplate == null || SelectedAccountTemplate.Id != _applicationState.CurrentDepartment.TicketTemplate.SaleTransactionTemplate.TargetAccountTemplateId)
+                {
+                    SelectedAccountTemplate = _cacheService.GetAccountTemplateById(
+                            _applicationState.CurrentDepartment.TicketTemplate.SaleTransactionTemplate.TargetAccountTemplateId);
+                }
+
+                ClearSearchValues();
+
+                if (account != null)
+                {
+                    FoundAccounts.Add(new AccountSearchViewModel(account, SelectedAccountTemplate));
                 }
             }
 

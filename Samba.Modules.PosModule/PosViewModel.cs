@@ -3,6 +3,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using Microsoft.Practices.Prism.Events;
 using Microsoft.Practices.Prism.Regions;
+using Samba.Domain.Models.Accounts;
 using Samba.Domain.Models.Settings;
 using Samba.Domain.Models.Tickets;
 using Samba.Domain.Models.Users;
@@ -20,6 +21,7 @@ namespace Samba.Modules.PosModule
         private readonly IUserService _userService;
         private readonly IApplicationState _applicationState;
         private readonly IRegionManager _regionManager;
+        private readonly AccountTicketsViewModel _accountTicketsViewModel;
         private readonly MenuItemSelectorViewModel _menuItemSelectorViewModel;
         private readonly TicketExplorerViewModel _ticketExplorerViewModel;
         private readonly MenuItemSelectorView _menuItemSelectorView;
@@ -27,17 +29,19 @@ namespace Samba.Modules.PosModule
         [ImportingConstructor]
         public PosViewModel(IRegionManager regionManager, IApplicationState applicationState, IApplicationStateSetter applicationStateSetter,
             ITicketService ticketService, IUserService userService, TicketExplorerViewModel ticketExplorerViewModel,
-            MenuItemSelectorViewModel menuItemSelectorViewModel, MenuItemSelectorView menuItemSelectorView)
+            MenuItemSelectorViewModel menuItemSelectorViewModel, MenuItemSelectorView menuItemSelectorView,AccountTicketsViewModel accountTicketsViewModel)
         {
             _ticketService = ticketService;
             _userService = userService;
             _applicationState = applicationState;
             _regionManager = regionManager;
             _menuItemSelectorView = menuItemSelectorView;
+            _accountTicketsViewModel = accountTicketsViewModel;
 
             _menuItemSelectorViewModel = menuItemSelectorViewModel;
             _ticketExplorerViewModel = ticketExplorerViewModel;
 
+            EventServiceFactory.EventService.GetEvent<GenericEvent<Account>>().Subscribe(OnAccountEvent);
             EventServiceFactory.EventService.GetEvent<GenericEvent<Ticket>>().Subscribe(OnTicketEvent);
             EventServiceFactory.EventService.GetEvent<GenericEvent<User>>().Subscribe(OnUserLoginEvent);
             EventServiceFactory.EventService.GetEvent<GenericEvent<WorkPeriod>>().Subscribe(OnWorkPeriodEvent);
@@ -74,6 +78,14 @@ namespace Samba.Modules.PosModule
                         DisplayOpenTickets();
                     }
                 });
+        }
+
+        private void OnAccountEvent(EventParameters<Account> obj)
+        {
+            if (obj.Topic == EventTopicNames.DisplayAccountTickets)
+            {
+                DisplayAccountTickets(obj.Value);
+            }
         }
 
         public CaptionCommand<Ticket> DisplayPaymentScreenCommand { get; set; }
@@ -144,6 +156,13 @@ namespace Samba.Modules.PosModule
         {
             _regionManager.RequestNavigate(RegionNames.MainRegion, new Uri("PosView", UriKind.Relative));
             _regionManager.RequestNavigate(RegionNames.PosMainRegion, new Uri("OpenTicketsView", UriKind.Relative));
+        }
+
+        public void DisplayAccountTickets(Account value)
+        {
+            _regionManager.RequestNavigate(RegionNames.MainRegion, new Uri("PosView", UriKind.Relative));
+            _regionManager.RequestNavigate(RegionNames.PosMainRegion, new Uri("AccountTicketsView", UriKind.Relative));
+            _accountTicketsViewModel.SelectedAccount = value;
         }
 
         public void DisplayMenuScreen()
