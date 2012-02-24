@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Omu.ValueInjecter;
 using Samba.Infrastructure.Data;
 using Samba.Infrastructure.Data.Serializer;
 
@@ -191,6 +192,79 @@ namespace Samba.Persistance.Data
         public static IQueryable<T> AsQueryable<T>() where T : class
         {
             return WorkspaceFactory.CreateReadOnly().Queryable<T>();
+        }
+
+        public static void SafeSave<T>(IEnumerable<T> items) where T : class, IEntity
+        {
+            using (var w = WorkspaceFactory.Create())
+            {
+                var set = items.Select(x => x.Id);
+                var dbTickets = w.All<T>(x => set.Contains(x.Id)).ToList();
+                dbTickets.ForEach(x => x.InjectFrom(new EntityInjection(w), items.Single(y => y.Id == x.Id)));
+                w.CommitChanges();
+            }
+        }
+    }
+
+    public class EntityInjection : ConventionInjection
+    {
+        private readonly IWorkspace _workspace;
+
+        public EntityInjection(IWorkspace workspace)
+        {
+            _workspace = workspace;
+        }
+
+        protected override bool Match(ConventionInfo c)
+        {
+            bool propertyMatch = c.SourceProp.Name == c.TargetProp.Name;
+            bool sourceNotNull = c.SourceProp.Value != null;
+
+            bool targetPropertyIdWritable = true;
+
+            if (propertyMatch && c.TargetProp.Name == "Id" && !(c.Target.Value is IEntity))
+                targetPropertyIdWritable = false;
+
+            return propertyMatch && sourceNotNull && targetPropertyIdWritable;
+        }
+
+        protected override object SetValue(ConventionInfo c)
+        {
+            if (c.SourceProp.Type.IsValueType || c.SourceProp.Type == typeof(string))
+                return c.SourceProp.Value;
+
+            if (c.SourceProp.Type.IsGenericType)
+            {
+                if (c.SourceProp.Type.GetGenericTypeDefinition().GetInterfaces().Contains(typeof(IEnumerable)))
+                {
+                    Type targetChildType = c.TargetProp.Type.GetGenericArguments()[0];
+                    if (targetChildType.IsValueType || targetChildType == typeof(string)) return c.SourceProp.Value;
+                    if (targetChildType.GetInterfaces().Any(x => x == typeof(IValue)))
+                    {
+                        var sourceCollection = (c.SourceProp.Value as IEnumerable).Cast<IValue>();
+                        foreach (var s in sourceCollection)
+                        {
+                            var sv = s;
+                            var target = (c.TargetProp.Value as IEnumerable).Cast<IValue>().SingleOrDefault(z => z.Id == sv.Id);
+                            if (target != null) target.InjectFrom(new EntityInjection(_workspace), sv);
+                            else
+                            {
+                                var addMethod = c.TargetProp.Value.GetType().GetMethod("Add");
+                                //var newItem = Activator.CreateInstance(targetChildType);
+                                //newItem.InjectFrom(new EntityInjection(_workspace), sv);
+                                addMethod.Invoke(c.TargetProp.Value, new[] { sv });
+                            }
+                        }
+                    }
+                }
+
+                return c.TargetProp.Value;
+            }
+
+            if (c.TargetProp.Value == null)
+                c.TargetProp.Value = Activator.CreateInstance(c.TargetProp.Type);
+
+            return c.TargetProp.Value.InjectFrom(new EntityInjection(_workspace), c.SourceProp.Value);
         }
     }
 }

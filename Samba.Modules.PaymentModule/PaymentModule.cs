@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.Composition;
-using Microsoft.Practices.Prism.Events;
+using System.Linq;
 using Microsoft.Practices.Prism.MefExtensions.Modularity;
 using Microsoft.Practices.Prism.Regions;
+using Samba.Domain.Models.Accounts;
 using Samba.Domain.Models.Tickets;
 using Samba.Presentation.Common;
 using Samba.Services;
@@ -14,13 +15,15 @@ namespace Samba.Modules.PaymentModule
     {
         private readonly IRegionManager _regionManager;
         private readonly PaymentEditorView _paymentEditorView;
+        private readonly ITicketService _ticketService;
 
         [ImportingConstructor]
-        public PaymentModule(IRegionManager regionManager, PaymentEditorView paymentEditorView)
+        public PaymentModule(IRegionManager regionManager, PaymentEditorView paymentEditorView, ITicketService ticketService)
             : base(regionManager, AppScreens.Payment)
         {
             _regionManager = regionManager;
             _paymentEditorView = paymentEditorView;
+            _ticketService = ticketService;
         }
 
         public override object GetVisibleView()
@@ -38,6 +41,17 @@ namespace Samba.Modules.PaymentModule
                  if (x.Topic == EventTopicNames.MakePayment)
                  {
                      ((PaymentEditorViewModel)_paymentEditorView.DataContext).Prepare(x.Value);
+                     Activate();
+                 }
+             });
+
+            EventServiceFactory.EventService.GetEvent<GenericEvent<Account>>().Subscribe(
+             x =>
+             {
+                 if (x.Topic == EventTopicNames.MakePayment)
+                 {
+                     var tickets = _ticketService.LoadTickets(y => y.AccountId == x.Value.Id && !y.IsPaid).ToArray();
+                     ((PaymentEditorViewModel)_paymentEditorView.DataContext).Prepare(tickets);
                      Activate();
                  }
              });

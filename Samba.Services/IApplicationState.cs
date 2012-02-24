@@ -31,5 +31,6 @@ namespace Samba.Services
         WorkPeriod PreviousWorkPeriod { get; }
         bool IsCurrentWorkPeriodOpen { get; }
         Terminal CurrentTerminal { get; }
+        Account SelectedAccountForTicket { get; }
     }
 }

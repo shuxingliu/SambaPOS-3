@@ -539,6 +539,7 @@ namespace Samba.Domain.Models.Tickets
             }
 
             RemainingAmount = GetRemainingAmount();
+            IsPaid = RemainingAmount == 0;
             TotalAmount = GetSum();
         }
 

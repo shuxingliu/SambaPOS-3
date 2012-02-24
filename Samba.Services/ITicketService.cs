@@ -79,8 +79,10 @@ namespace Samba.Services
         void UpdateTag(Ticket ticket, TicketTagGroup tagGroup, TicketTag ticketTag);
         IEnumerable<Order> ExtractSelectedOrders(Ticket model, IEnumerable<Order> selectedOrders);
         int GetOpenTicketCount();
-        IEnumerable<OpenTicketData> GetOpenTickets(Expression<Func<Ticket, bool>> prediction);
+        IEnumerable<OpenTicketData> GetTicketData(Expression<Func<Ticket, bool>> prediction);
         IList<TicketExplorerRowData> GetFilteredTickets(DateTime startDate, DateTime endDate, IList<ITicketExplorerFilter> filters);
         IList<ITicketExplorerFilter> CreateTicketExplorerFilters();
+        IEnumerable<Ticket> LoadTickets(Expression<Func<Ticket, bool>> prediction);
+        void SaveTickets(IEnumerable<Ticket> tickets);
     }
 }

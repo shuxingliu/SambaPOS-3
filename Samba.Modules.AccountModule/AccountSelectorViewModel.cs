@@ -221,6 +221,7 @@ namespace Samba.Modules.AccountModule
         {
             return
                 _applicationState.IsCurrentWorkPeriodOpen
+                && _applicationState.CurrentDepartment != null
                 && SelectedAccount != null
                 && !string.IsNullOrEmpty(SelectedAccount.Name);
         }

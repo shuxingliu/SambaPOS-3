@@ -42,7 +42,6 @@ namespace Samba.Modules.PosModule
             _ticketExplorerViewModel = ticketExplorerViewModel;
 
             EventServiceFactory.EventService.GetEvent<GenericEvent<Account>>().Subscribe(OnAccountEvent);
-            EventServiceFactory.EventService.GetEvent<GenericEvent<Ticket>>().Subscribe(OnTicketEvent);
             EventServiceFactory.EventService.GetEvent<GenericEvent<User>>().Subscribe(OnUserLoginEvent);
             EventServiceFactory.EventService.GetEvent<GenericEvent<WorkPeriod>>().Subscribe(OnWorkPeriodEvent);
             EventServiceFactory.EventService.GetEvent<GenericEvent<SelectedOrdersData>>().Subscribe(
@@ -66,6 +65,9 @@ namespace Samba.Modules.PosModule
                              break;
                          case EventTopicNames.ActivateTicket:
                              DisplaySingleTicket();
+                             break;
+                         case EventTopicNames.PaymentSubmitted:
+                             DisplayMenuScreen();
                              break;
                      }
                  });
@@ -114,16 +116,6 @@ namespace Samba.Modules.PosModule
             }
         }
 
-        private void OnTicketEvent(EventParameters<Ticket> obj)
-        {
-            switch (obj.Topic)
-            {
-                case EventTopicNames.PaymentSubmitted:
-                    DisplayMenuScreen();
-                    break;
-            }
-        }
-
         public void DisplayTickets()
         {
             if (_applicationState.CurrentTicket != null)
@@ -162,7 +154,7 @@ namespace Samba.Modules.PosModule
         {
             _regionManager.RequestNavigate(RegionNames.MainRegion, new Uri("PosView", UriKind.Relative));
             _regionManager.RequestNavigate(RegionNames.PosMainRegion, new Uri("AccountTicketsView", UriKind.Relative));
-            _accountTicketsViewModel.SelectedAccount = value;
+            _accountTicketsViewModel.UpdateSelectedAccount(value);
         }
 
         public void DisplayMenuScreen()

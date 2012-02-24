@@ -13,6 +13,7 @@ using Samba.Localization.Properties;
 using Samba.Persistance.Data;
 using Samba.Persistance.Data.Specification;
 using Samba.Services.Common;
+using Omu.ValueInjecter;
 
 namespace Samba.Services.Implementations.TicketModule
 {
@@ -86,8 +87,7 @@ namespace Samba.Services.Implementations.TicketModule
 
         private Ticket CreateTicket()
         {
-            var account = _cacheService.GetAccountById(
-                    _applicationState.CurrentDepartment.TicketTemplate.SaleTransactionTemplate.DefaultTargetAccountId);
+            var account = _applicationState.SelectedAccountForTicket ?? _cacheService.GetAccountById(_applicationState.CurrentDepartment.TicketTemplate.SaleTransactionTemplate.DefaultTargetAccountId);
             return Ticket.Create(_applicationState.CurrentDepartment, account);
         }
 
@@ -177,8 +177,7 @@ namespace Samba.Services.Implementations.TicketModule
             if (canSumbitTicket)
             {
                 ticket.Recalculate(_settingService.ProgramSettings.AutoRoundDiscount, _applicationState.CurrentLoggedInUser.Id);
-                ticket.IsPaid = ticket.RemainingAmount == 0;
-
+                
                 if (ticket.Orders.Count > 0)
                 {
                     var department = _departmentService.GetDepartment(ticket.DepartmentId);
@@ -214,6 +213,7 @@ namespace Samba.Services.Implementations.TicketModule
             result.TicketId = ticket.Id;
             _workspace = null;
             _applicationStateSetter.SetCurrentTicket(null);
+            _applicationStateSetter.SetSelectedAccountForTicket(null);
 
             return result;
         }
@@ -260,32 +260,32 @@ namespace Samba.Services.Implementations.TicketModule
 
         public void ChangeTicketLocation(Ticket ticket, int locationId)
         {
-        //    Debug.Assert(ticket != null);
+            //    Debug.Assert(ticket != null);
 
-        //    var location = _workspace.Single<Location>(x => x.Id == locationId);
-        //    var oldLocation = "";
+            //    var location = _workspace.Single<Location>(x => x.Id == locationId);
+            //    var oldLocation = "";
 
-        //    if (!string.IsNullOrEmpty(ticket.LocationName))
-        //    {
-        //        oldLocation = ticket.LocationName;
-        //        var oldLoc = _workspace.Single<Location>(x => x.Name == oldLocation);
-        //        if (oldLoc.TicketId == ticket.Id)
-        //        {
-        //            oldLoc.Reset();
-        //        }
-        //    }
+            //    if (!string.IsNullOrEmpty(ticket.LocationName))
+            //    {
+            //        oldLocation = ticket.LocationName;
+            //        var oldLoc = _workspace.Single<Location>(x => x.Name == oldLocation);
+            //        if (oldLoc.TicketId == ticket.Id)
+            //        {
+            //            oldLoc.Reset();
+            //        }
+            //    }
 
-        //    if (location.TicketId > 0 && location.TicketId != ticket.Id)
-        //    {
-        //        MoveOrders(ticket, ticket.Orders.ToList(), location.TicketId);
-        //        ticket = OpenTicket(location.TicketId);
-        //    }
+            //    if (location.TicketId > 0 && location.TicketId != ticket.Id)
+            //    {
+            //        MoveOrders(ticket, ticket.Orders.ToList(), location.TicketId);
+            //        ticket = OpenTicket(location.TicketId);
+            //    }
 
-        //    ticket.LocationName = location.Name;
-        //    if (_applicationState.CurrentDepartment != null) ticket.DepartmentId = _applicationState.CurrentDepartment.Id;
-        //    location.TicketId = ticket.GetRemainingAmount() > 0 ? ticket.Id : 0;
+            //    ticket.LocationName = location.Name;
+            //    if (_applicationState.CurrentDepartment != null) ticket.DepartmentId = _applicationState.CurrentDepartment.Id;
+            //    location.TicketId = ticket.GetRemainingAmount() > 0 ? ticket.Id : 0;
 
-        //    _automationService.NotifyEvent(RuleEventNames.TicketLocationChanged, new { Ticket = ticket, OldLocation = oldLocation, NewLocation = ticket.LocationName });
+            //    _automationService.NotifyEvent(RuleEventNames.TicketLocationChanged, new { Ticket = ticket, OldLocation = oldLocation, NewLocation = ticket.LocationName });
         }
 
         //public Account CheckAccount(Account account)
@@ -442,7 +442,7 @@ namespace Samba.Services.Implementations.TicketModule
             return Dao.Count<Ticket>(x => !x.IsPaid);
         }
 
-        public IEnumerable<OpenTicketData> GetOpenTickets(Expression<Func<Ticket, bool>> prediction)
+        public IEnumerable<OpenTicketData> GetTicketData(Expression<Func<Ticket, bool>> prediction)
         {
             return Dao.Select(x => new OpenTicketData
             {
@@ -487,6 +487,22 @@ namespace Samba.Services.Implementations.TicketModule
         {
             var item = new TicketExplorerFilter { FilterType = FilterType.OpenTickets };
             return new List<ITicketExplorerFilter> { item };
+        }
+
+        public IEnumerable<Ticket> LoadTickets(Expression<Func<Ticket, bool>> prediction)
+        {
+            var tickets = Dao.Query(prediction, x => x.Orders.Select(y => y.OrderTagValues),
+                x => x.Calculations, x => x.Payments, x => x.PaidItems, x => x.Tags,
+                x => x.AccountTransactions.AccountTransactions,
+                x => x.AccountTransactions.AccountTransactions.Select(y => y.SourceTransactionValue),
+                x => x.AccountTransactions.AccountTransactions.Select(y => y.TargetTransactionValue));
+            return tickets;
+        }
+
+        public void SaveTickets(IEnumerable<Ticket> tickets)
+        {
+            tickets.ToList().ForEach(RecalculateTicket);
+            Dao.SafeSave(tickets);
         }
 
         public IEnumerable<Order> ExtractSelectedOrders(Ticket model, IEnumerable<Order> selectedOrders)

@@ -8,6 +8,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <Label FontSize="24" FontWeight="Bold" Content="{Binding SelectedAccount.Name}"></Label>
         <ItemsControl FontSize="24" Grid.Row="1" ItemsSource="{Binding OpenTickets}" Grid.IsSharedSizeScope="True">
@@ -21,7 +22,7 @@
 
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <FxButton:FlexButton Margin="0,0,0,0" Padding="2" Focusable="False"
+                    <FxButton:FlexButton Margin="0,0,0,0" Padding="2" Focusable="False" ButtonColor="White"
                                      Command="{Binding DataContext.OpenTicketCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}}"
                                      CommandParameter="{Binding Id}">
                             <Grid HorizontalAlignment="Stretch">
@@ -35,6 +36,20 @@
                                     <TextBlock Margin="5" Text="{Binding Total}" TextAlignment="Right"/>
                                 </DockPanel>
                             </Grid>
+                    </FxButton:FlexButton>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <ItemsControl Grid.Row="2" ItemsSource="{Binding PaymentButtonGroup.PaymentButtons}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" MinHeight="60" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <FxButton:FlexButton FontSize="30" Content="{Binding Caption}" ButtonColor="{Binding Color}" Focusable="False" Command="{Binding Command}" 
+                                         CommandParameter="{Binding Parameter}" Margin="0,0,3,3">
                     </FxButton:FlexButton>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Samba.Domain.Models.Tickets;
@@ -10,8 +11,8 @@ namespace Samba.Presentation.ViewModels
 {
     public class TicketTotalsViewModel : ObservableObject
     {
-        public Ticket Model { get; set; }
-        public TicketTotalsViewModel(Ticket model)
+        public IEnumerable<Ticket> Model { get; set; }
+        public TicketTotalsViewModel(params Ticket[] model)
         {
             Model = model;
         }
@@ -22,28 +23,28 @@ namespace Samba.Presentation.ViewModels
             get
             {
                 return _payments ?? (_payments = new ObservableCollection<PaymentViewModel>(
-                    Model.Payments.Select(x => new PaymentViewModel(x))));
+                    Model.SelectMany(x => x.Payments).Select(x => new PaymentViewModel(x))));
             }
         }
 
         private ObservableCollection<ServiceViewModel> _preServices;
         public ObservableCollection<ServiceViewModel> PreServices
         {
-            get { return _preServices ?? (_preServices = new ObservableCollection<ServiceViewModel>(Model.Calculations.Where(x => !x.IncludeTax).Select(x => new ServiceViewModel(x)))); }
+            get { return _preServices ?? (_preServices = new ObservableCollection<ServiceViewModel>(Model.SelectMany(x => x.Calculations).Where(x => !x.IncludeTax).Select(x => new ServiceViewModel(x)))); }
         }
 
         private ObservableCollection<ServiceViewModel> _postServices;
         public ObservableCollection<ServiceViewModel> PostServices
         {
-            get { return _postServices ?? (_postServices = new ObservableCollection<ServiceViewModel>(Model.Calculations.Where(x => x.IncludeTax).Select(x => new ServiceViewModel(x)))); }
+            get { return _postServices ?? (_postServices = new ObservableCollection<ServiceViewModel>(Model.SelectMany(x => x.Calculations).Where(x => x.IncludeTax).Select(x => new ServiceViewModel(x)))); }
         }
 
-        public decimal TicketTotalValue { get { return Model.GetSum(); } }
-        public decimal TicketTaxValue { get { return Model.CalculateTax(Model.GetPlainSum(), Model.GetPreTaxServicesTotal()); } }
-        public decimal TicketSubTotalValue { get { return Model.GetPlainSum() + Model.GetPreTaxServicesTotal(); } }
-        public decimal TicketPaymentValue { get { return Model.GetPaymentAmount(); } }
-        public decimal TicketRemainingValue { get { return Model.GetRemainingAmount(); } }
-        public decimal TicketPlainTotalValue { get { return Model.GetPlainSum(); } }
+        public decimal TicketTotalValue { get { return Model.Sum(x => x.GetSum()); } }
+        public decimal TicketTaxValue { get { return Model.Sum(x => x.CalculateTax(x.GetPlainSum(), x.GetPreTaxServicesTotal())); } }
+        public decimal TicketSubTotalValue { get { return Model.Sum(x => x.GetPlainSum() + x.GetPreTaxServicesTotal()); } }
+        public decimal TicketPaymentValue { get { return Model.Sum(x => x.GetPaymentAmount()); } }
+        public decimal TicketRemainingValue { get { return Model.Sum(x => x.GetRemainingAmount()); } }
+        public decimal TicketPlainTotalValue { get { return Model.Sum(x => x.GetPlainSum()); } }
 
         public bool IsTicketTotalVisible { get { return TicketPaymentValue > 0 && TicketTotalValue > 0; } }
         public bool IsTicketPaymentVisible { get { return TicketPaymentValue > 0; } }
@@ -86,21 +87,22 @@ namespace Samba.Presentation.ViewModels
         {
             get
             {
-                if (Model == null) return "";
+                if (Model.Count() == 0) return "";
 
                 string selectedTicketTitle;
-
-                if (!string.IsNullOrEmpty(Model.LocationName) && Model.Id == 0)
-                    selectedTicketTitle = string.Format(Resources.Location_f, Model.LocationName);
-                else if (!string.IsNullOrEmpty(Model.AccountName) && Model.Id == 0)
-                    selectedTicketTitle = string.Format(Resources.Account_f, Model.AccountName);
-                else if (string.IsNullOrEmpty(Model.AccountName)) selectedTicketTitle = string.IsNullOrEmpty(Model.LocationName)
-                     ? string.Format("# {0}", Model.TicketNumber)
-                     : string.Format(Resources.TicketNumberAndLocation_f, Model.TicketNumber, Model.LocationName);
-                else if (string.IsNullOrEmpty(Model.LocationName)) selectedTicketTitle = string.IsNullOrEmpty(Model.AccountName)
-                     ? string.Format("# {0}", Model.TicketNumber)
-                     : string.Format(Resources.TicketNumberAndAccount_f, Model.TicketNumber, Model.AccountName);
-                else selectedTicketTitle = string.Format(Resources.AccountNameAndLocationName_f, Model.TicketNumber, Model.AccountName, Model.LocationName);
+                var m = Model.OrderByDescending(x=>x.Date).First();
+                
+                if (!string.IsNullOrEmpty(m.LocationName) && m.Id == 0)
+                    selectedTicketTitle = string.Format(Resources.Location_f, m.LocationName);
+                else if (!string.IsNullOrEmpty(m.AccountName) && m.Id == 0)
+                    selectedTicketTitle = string.Format(Resources.Account_f, m.AccountName);
+                else if (string.IsNullOrEmpty(m.AccountName)) selectedTicketTitle = string.IsNullOrEmpty(m.LocationName)
+                     ? string.Format("# {0}", m.TicketNumber)
+                     : string.Format(Resources.TicketNumberAndLocation_f, m.TicketNumber, m.LocationName);
+                else if (string.IsNullOrEmpty(m.LocationName)) selectedTicketTitle = string.IsNullOrEmpty(m.AccountName)
+                     ? string.Format("# {0}", m.TicketNumber)
+                     : string.Format(Resources.TicketNumberAndAccount_f, m.TicketNumber, m.AccountName);
+                else selectedTicketTitle = string.Format(Resources.AccountNameAndLocationName_f, m.TicketNumber, m.AccountName, m.LocationName);
 
                 return selectedTicketTitle;
             }

@@ -230,8 +230,7 @@ namespace Samba.Modules.PosModule
             EventServiceFactory.EventService.GetEvent<GenericEvent<OrderViewModel>>().Subscribe(OnSelectedOrdersChanged);
             EventServiceFactory.EventService.GetEvent<GenericEvent<TicketTagData>>().Subscribe(OnTagSelected);
             EventServiceFactory.EventService.GetEvent<GenericEvent<Account>>().Subscribe(OnAccountSelectedForTicket);
-            EventServiceFactory.EventService.GetEvent<GenericEvent<Ticket>>().Subscribe(OnPaymentSubmitted);
-            EventServiceFactory.EventService.GetEvent<GenericEvent<EventAggregator>>().Subscribe(OnRefreshTicket);
+            EventServiceFactory.EventService.GetEvent<GenericEvent<EventAggregator>>().Subscribe(OnRefreshEvent);
             EventServiceFactory.EventService.GetEvent<GenericEvent<Message>>().Subscribe(OnMessageReceived);
             EventServiceFactory.EventService.GetEvent<GenericEvent<PopupData>>().Subscribe(OnAccountSelectedFromPopup);
             EventServiceFactory.EventService.GetEvent<GenericEvent<OrderTagData>>().Subscribe(OnOrderTagEvent);
@@ -267,7 +266,7 @@ namespace Samba.Modules.PosModule
             }
         }
 
-        private void OnRefreshTicket(EventParameters<EventAggregator> obj)
+        private void OnRefreshEvent(EventParameters<EventAggregator> obj)
         {
             if (SelectedDepartment == null && _applicationState.CurrentLoggedInUser.UserRole.DepartmentId > 0)
                 UpdateSelectedDepartment(_applicationState.CurrentLoggedInUser.UserRole.DepartmentId);
@@ -283,6 +282,12 @@ namespace Samba.Modules.PosModule
                 _selectedTicket = null;
                 RefreshVisuals();
                 EventServiceFactory.EventService.PublishEvent(EventTopicNames.ActivateTicket);
+            }
+
+            if (obj.Topic == EventTopicNames.PaymentSubmitted)
+            {
+                _selectedTicket = null;
+                CloseTicket();
             }
         }
 
@@ -313,13 +318,6 @@ namespace Samba.Modules.PosModule
                 SelectedDepartment.PublishEvent(EventTopicNames.ActivateOpenTickets);
                 RefreshVisuals();
             }
-        }
-
-        private void OnPaymentSubmitted(EventParameters<Ticket> obj)
-        {
-            _selectedTicket = null;
-            if (obj.Topic == EventTopicNames.PaymentSubmitted)
-                CloseTicket();
         }
 
         private void OnAccountSelectedForTicket(EventParameters<Account> obj)

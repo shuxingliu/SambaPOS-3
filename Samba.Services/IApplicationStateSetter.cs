@@ -9,10 +9,10 @@ namespace Samba.Services
     {
         void SetCurrentTicket(Ticket ticket);
         void SetCurrentLoggedInUser(User user);
-        //void SetCurrentDepartment(Department department);
         void SetCurrentDepartment(int departmentId);
         void SetCurrentApplicationScreen(AppScreens appScreen);
         void SetSelectedLocationScreen(AccountScreen locationScreen);
+        void SetSelectedAccountForTicket(Account account);
         void ResetWorkPeriods();
     }
 }

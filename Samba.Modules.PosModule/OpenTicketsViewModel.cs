@@ -73,7 +73,7 @@ namespace Samba.Modules.PosModule
 
             Expression<Func<Ticket, bool>> prediction = x => !x.IsPaid && x.DepartmentId == department.Id;
 
-            var openTickets = _ticketService.GetOpenTickets(prediction);
+            var openTickets = _ticketService.GetTicketData(prediction);
             var shouldWrap = !department.IsTakeAway;
 
             OpenTickets = openTickets.Select(x => new OpenTicketButtonViewModel(x, shouldWrap)).OrderBy(x => x.LastOrderDate);

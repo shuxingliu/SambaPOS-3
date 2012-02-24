@@ -30,6 +30,7 @@ namespace Samba.Presentation.Common.Services
         public Department CurrentDepartment { get; private set; }
         public Ticket CurrentTicket { get; private set; }
         public AccountScreen SelectedLocationScreen { get; private set; }
+        public Account SelectedAccountForTicket { get; set; }
 
         private Terminal _terminal;
         public Terminal CurrentTerminal { get { return _terminal ?? (_terminal = GetCurrentTerminal()); } set { _terminal = value; } }
@@ -98,6 +99,11 @@ namespace Samba.Presentation.Common.Services
         public void SetSelectedLocationScreen(AccountScreen locationScreen)
         {
             SelectedLocationScreen = locationScreen;
+        }
+
+        public void SetSelectedAccountForTicket(Account account)
+        {
+            SelectedAccountForTicket = account;
         }
 
         private Terminal GetCurrentTerminal()
