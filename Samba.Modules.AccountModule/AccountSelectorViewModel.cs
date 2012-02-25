@@ -63,7 +63,7 @@ namespace Samba.Modules.AccountModule
             FindTicketCommand = new CaptionCommand<string>(Resources.FindTicket.Replace(" ", "\r"), OnFindTicket, CanFindTicket);
             ResetAccountCommand = new CaptionCommand<string>(Resources.ResetAccount.Replace(" ", "\r"), OnResetAccount, CanResetAccount);
             MakePaymentCommand = new CaptionCommand<string>(Resources.GetPayment_r, OnMakePayment, CanMakePayment);
-            DisplayAccountCommand = new CaptionCommand<string>(Resources.AccountDetails.Replace(" ", "\r"), OnDisplayAccount, CanSelectAccount);
+            DisplayAccountCommand = new CaptionCommand<string>(Resources.AccountDetails.Replace(" ", "\r"), OnDisplayAccount, CanDisplayAccount);
         }
 
         public IEnumerable<AccountTemplate> AccountTemplates { get { return _cacheService.GetAccountTemplates(); } }
@@ -217,6 +217,14 @@ namespace Samba.Modules.AccountModule
             c.PublishEvent(EventTopicNames.EditAccountDetails);
         }
 
+        private bool CanDisplayAccount(string arg)
+        {
+            return
+                _applicationState.IsCurrentWorkPeriodOpen
+                && SelectedAccount != null
+                && !string.IsNullOrEmpty(SelectedAccount.Name);
+        }
+      
         private bool CanSelectAccount(string arg)
         {
             return

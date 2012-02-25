@@ -44,9 +44,9 @@ namespace Samba.Domain.Models.Accounts
                 transaction.Name = description;
                 transaction.Amount = amount;
                 if (transaction.SourceTransactionValue.AccountTemplateId == MasterAccountTemplateId)
-                    transaction.SetSoruceAccount(account.Id);
+                    transaction.SetSoruceAccount(account.AccountTemplateId, account.Id);
                 if (transaction.TargetTransactionValue.AccountTemplateId == MasterAccountTemplateId)
-                    transaction.SetTargetAccount(account.Id);
+                    transaction.SetTargetAccount(account.AccountTemplateId, account.Id);
                 result.AccountTransactions.Add(transaction);
             }
             return result;

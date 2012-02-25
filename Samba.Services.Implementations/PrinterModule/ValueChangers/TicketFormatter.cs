@@ -18,14 +18,14 @@ namespace Samba.Services.Implementations.PrinterModule.ValueChangers
         private static readonly ISettingService SettingService = ServiceLocator.Current.GetInstance<ISettingService>();
         private static ISettingReplacer _settingReplacer;
 
-        public static string[] GetFormattedTicket(Ticket ticket, IEnumerable<Order> lines, PrinterTemplate template)
+        public static string[] GetFormattedTicket(Ticket[] tickets, IEnumerable<Order> lines, PrinterTemplate template)
         {
             _settingReplacer = SettingService.GetSettingReplacer();
             if (template.MergeLines) lines = MergeLines(lines);
             var orderNo = lines.Count() > 0 ? lines.ElementAt(0).OrderNumber : 0;
             var userNo = lines.Count() > 0 ? lines.ElementAt(0).CreatingUserName : "";
-            var header = ReplaceDocumentVars(template.HeaderTemplate, ticket, orderNo, userNo);
-            var footer = ReplaceDocumentVars(template.FooterTemplate, ticket, orderNo, userNo);
+            var header = ReplaceDocumentVars(template.HeaderTemplate, tickets, orderNo, userNo);
+            var footer = ReplaceDocumentVars(template.FooterTemplate, tickets, orderNo, userNo);
             var lns = lines.SelectMany(x => FormatLines(template, x).Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)).ToArray();
 
             var result = header.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -75,20 +75,20 @@ namespace Samba.Services.Implementations.PrinterModule.ValueChangers
             return result;
         }
 
-        private static string ReplaceDocumentVars(string document, Ticket ticket, int orderNo, string userName)
+        private static string ReplaceDocumentVars(string document, IEnumerable<Ticket> tickets, int orderNo, string userName)
         {
             string result = document;
             if (string.IsNullOrEmpty(document)) return "";
 
-            result = FormatData(result, TagNames.TicketDate, () => ticket.Date.ToShortDateString());
-            result = FormatData(result, TagNames.TicketTime, () => ticket.Date.ToShortTimeString());
+            result = FormatData(result, TagNames.TicketDate, () => tickets.Last().Date.ToShortDateString());
+            result = FormatData(result, TagNames.TicketTime, () => tickets.Last().Date.ToShortTimeString());
             result = FormatData(result, TagNames.Date, () => DateTime.Now.ToShortDateString());
             result = FormatData(result, TagNames.Time, () => DateTime.Now.ToShortTimeString());
-            result = FormatData(result, TagNames.TicketId, () => ticket.Id.ToString());
-            result = FormatData(result, TagNames.TicketNo, () => ticket.TicketNumber);
+            result = FormatData(result, TagNames.TicketId, () => tickets.Last().Id.ToString());
+            result = FormatData(result, TagNames.TicketNo, () => tickets.Last().TicketNumber);
             result = FormatData(result, TagNames.OrderNo, orderNo.ToString);
-            result = FormatData(result, TagNames.TicketTag, ticket.GetTagData);
-            result = FormatDataIf(true, result, TagNames.Department, () => GetDepartmentName(ticket.DepartmentId));
+            result = FormatData(result, TagNames.TicketTag, () => tickets.SelectMany(x => x.GetTagData().Split('\r')).Distinct().Aggregate("", (c, v) => c + v.Trim() + "\r"));
+            result = FormatDataIf(true, result, TagNames.Department, () => GetDepartmentName(tickets.Last().DepartmentId));
 
             const string ticketTagPattern = TagNames.TicketTag2 + "[^}]+}";
 
@@ -100,8 +100,8 @@ namespace Samba.Services.Implementations.PrinterModule.ValueChangers
                 {
                     var tag = value.Trim('{', '}').Split(':')[1];
                     tags = tag.Split(',').Aggregate(tags, (current, t) => current +
-                        (!string.IsNullOrEmpty(ticket.GetTagValue(t.Trim()))
-                        ? (t + ": " + ticket.GetTagValue(t.Trim()) + "\r")
+                        (tickets.Any(x => x.IsTaggedWith(t.Trim()))
+                        ? (t + ": " + tickets.Last(x => x.IsTaggedWith(t.Trim())).GetTagValue(t.Trim()) + "\r")
                         : ""));
                     result = FormatData(result.Trim('\r'), value, () => tags);
                 }
@@ -117,7 +117,7 @@ namespace Samba.Services.Implementations.PrinterModule.ValueChangers
             {
                 var value = Regex.Match(result, ticketTag2Pattern).Groups[0].Value;
                 var tag = value.Trim('{', '}').Split(':')[1];
-                var tagValue = ticket.GetTagValue(tag);
+                var tagValue = tickets.Last(x => x.IsTaggedWith(tag.Trim())).GetTagValue(tag);
                 try
                 {
                     result = FormatData(result, value, () => tagValue);
@@ -128,38 +128,38 @@ namespace Samba.Services.Implementations.PrinterModule.ValueChangers
                 }
             }
 
-            var title = ticket.LocationName;
-            if (string.IsNullOrEmpty(ticket.LocationName))
+            var title = tickets.Last().LocationName;
+            if (string.IsNullOrEmpty(tickets.Last().LocationName))
                 title = userName;
 
             result = FormatData(result, TagNames.LocationUser, () => title);
             result = FormatData(result, TagNames.UserName, () => userName);
-            result = FormatData(result, TagNames.Location, () => ticket.LocationName);
-            result = FormatData(result, TagNames.Note, () => ticket.Note);
-            result = FormatData(result, TagNames.AccName, () => ticket.AccountName);
+            result = FormatData(result, TagNames.Location, () => tickets.Last().LocationName);
+            result = FormatData(result, TagNames.Note, () => tickets.Last().Note);
+            result = FormatData(result, TagNames.AccName, () => tickets.Last().AccountName);
 
-            if (ticket.AccountId > 0 && (result.Contains(TagNames.AccAddress) || result.Contains(TagNames.AccPhone)))
+            if (tickets.Last().AccountId > 0 && (result.Contains(TagNames.AccAddress) || result.Contains(TagNames.AccPhone)))
             {
-                var account = Dao.SingleWithCache<Account>(x => x.Id == ticket.AccountId);
+                var account = Dao.SingleWithCache<Account>(x => x.Id == tickets.Last().AccountId);
                 result = FormatData(result, TagNames.AccPhone, () => account.SearchString);
             }
 
             result = RemoveTag(result, TagNames.AccAddress);
             result = RemoveTag(result, TagNames.AccPhone);
 
-            var payment = ticket.GetPaymentAmount();
-            var remaining = ticket.GetRemainingAmount();
-            var plainTotal = ticket.GetPlainSum();
-            var preTaxServices = ticket.GetPreTaxServicesTotal();
-            var taxAmount = ticket.CalculateTax(plainTotal, preTaxServices);  //GetTaxTotal(ticket.Orders, plainTotal, ticket.GetDiscountTotal());
-            var servicesTotal = ticket.GetPostTaxServicesTotal();
+            var payment = tickets.Sum(x => x.GetPaymentAmount());
+            var remaining = tickets.Sum(x => x.GetRemainingAmount());
+            var plainTotal = tickets.Sum(x => x.GetPlainSum());
+            var preTaxServices = tickets.Sum(x => x.GetPreTaxServicesTotal());
+            var taxAmount = tickets.Sum(x => x.CalculateTax(plainTotal, preTaxServices));  //GetTaxTotal(ticket.Orders, plainTotal, ticket.GetDiscountTotal());
+            var servicesTotal = tickets.Sum(x => x.GetPostTaxServicesTotal());
             //ticket.CalculateTax(plainTotal, preTaxServices);
 
             result = FormatDataIf(taxAmount > 0 || preTaxServices > 0 || servicesTotal > 0, result, TagNames.PlainTotal, () => plainTotal.ToString("#,#0.00"));
             result = FormatDataIf(preTaxServices > 0, result, TagNames.DiscountTotal, () => preTaxServices.ToString("#,#0.00"));
             result = FormatDataIf(taxAmount > 0, result, TagNames.TaxTotal, () => taxAmount.ToString("#,#0.00"));
-            result = FormatDataIf(taxAmount > 0, result, TagNames.TaxDetails, () => GetTaxDetails(ticket.Orders, plainTotal, preTaxServices));
-            result = FormatDataIf(servicesTotal > 0, result, TagNames.CalculationDetails, () => GetServiceDetails(ticket));
+            result = FormatDataIf(taxAmount > 0, result, TagNames.TaxDetails, () => GetTaxDetails(tickets.SelectMany(x => x.Orders), plainTotal, preTaxServices));
+            result = FormatDataIf(servicesTotal > 0, result, TagNames.CalculationDetails, () => GetServiceDetails(tickets));
 
             result = FormatDataIf(payment > 0, result, TagNames.IfPaid,
                 () => string.Format(Resources.RemainingAmountIfPaidValue_f, payment.ToString("#,#0.00"), remaining.ToString("#,#0.00")));
@@ -169,12 +169,12 @@ namespace Samba.Services.Implementations.PrinterModule.ValueChangers
 
             result = FormatDataIf(preTaxServices < 0, result, TagNames.IfFlatten, () => string.Format(Resources.IfNegativeDiscountValue_f, preTaxServices.ToString("#,#0.00")));
 
-            result = FormatData(result, TagNames.TicketTotal, () => ticket.GetSum().ToString("#,#0.00"));
-            result = FormatData(result, TagNames.PaymentTotal, () => ticket.GetPaymentAmount().ToString("#,#0.00"));
-            result = FormatData(result, TagNames.Balance, () => ticket.GetRemainingAmount().ToString("#,#0.00"));
+            result = FormatData(result, TagNames.TicketTotal, () => tickets.Sum(x => x.GetSum()).ToString("#,#0.00"));
+            result = FormatData(result, TagNames.PaymentTotal, () => tickets.Sum(x => x.GetPaymentAmount()).ToString("#,#0.00"));
+            result = FormatData(result, TagNames.Balance, () => tickets.Sum(x => x.GetRemainingAmount()).ToString("#,#0.00"));
 
-            result = FormatData(result, TagNames.TotalText, () => HumanFriendlyInteger.CurrencyToWritten(ticket.GetSum()));
-            result = FormatData(result, TagNames.Totaltext, () => HumanFriendlyInteger.CurrencyToWritten(ticket.GetSum(), true));
+            result = FormatData(result, TagNames.TotalText, () => HumanFriendlyInteger.CurrencyToWritten(tickets.Sum(x => x.GetSum())));
+            result = FormatData(result, TagNames.Totaltext, () => HumanFriendlyInteger.CurrencyToWritten(tickets.Sum(x => x.GetSum()), true));
 
             result = _settingReplacer.ReplaceSettingValue("{SETTING:([^}]+)}", result);
 
@@ -187,13 +187,13 @@ namespace Samba.Services.Implementations.PrinterModule.ValueChangers
             return dep != null ? dep.Name : Resources.UndefinedWithBrackets;
         }
 
-        private static string GetServiceDetails(Ticket ticket)
+        private static string GetServiceDetails(IEnumerable<Ticket> tickets)
         {
             var sb = new StringBuilder();
-            foreach (var service in ticket.Calculations)
+            foreach (var service in tickets.SelectMany(x => x.Calculations))
             {
                 var lservice = service;
-                var ts = SettingService.GetCalculationTemplateById(lservice.ServiceId);
+                var ts = SettingService.GetCalculationTemplateById(lservice.CalculationTemplateId);
                 var tsTitle = ts != null ? ts.Name : Resources.UndefinedWithBrackets;
                 sb.AppendLine("<J>" + tsTitle + ":|" + lservice.CalculationAmount.ToString("#,#0.00"));
             }

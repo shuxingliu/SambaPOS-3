@@ -234,7 +234,7 @@ namespace Samba.Modules.PosModule
         {
             if (_applicationState.CurrentTicket == null)
             {
-                _ticketService.OpenTicketByLocationName(NumeratorValue);
+                //_ticketService.OpenTicketByLocationName(NumeratorValue);
                 if (_applicationState.CurrentTicket != null)
                     EventServiceFactory.EventService.PublishEvent(EventTopicNames.RefreshSelectedTicket);
             }

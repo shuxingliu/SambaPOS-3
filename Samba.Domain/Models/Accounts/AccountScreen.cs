@@ -18,11 +18,11 @@ namespace Samba.Domain.Models.Accounts
         public int NumeratorHeight { get; set; }
         public string AlphaButtonValues { get; set; }
 
-        private IList<AccountButton> _states;
-        public virtual IList<AccountButton> States
+        private IList<AccountButton> _buttons;
+        public virtual IList<AccountButton> Buttons
         {
-            get { return _states; }
-            set { _states = value; }
+            get { return _buttons; }
+            set { _buttons = value; }
         }
 
         public string UserString
@@ -34,7 +34,7 @@ namespace Samba.Domain.Models.Accounts
 
         public AccountScreen()
         {
-            _states = new List<AccountButton>();
+            _buttons = new List<AccountButton>();
             LocationEmptyColor = "WhiteSmoke";
             LocationFullColor = "Orange";
             LocationLockedColor = "Brown";
@@ -47,16 +47,16 @@ namespace Samba.Domain.Models.Accounts
         {
             get
             {
-                var itemCount = States.Count / PageCount;
-                if (States.Count % PageCount > 0) itemCount++;
+                var itemCount = Buttons.Count / PageCount;
+                if (Buttons.Count % PageCount > 0) itemCount++;
                 return itemCount;
             }
         }
 
         public void AddScreenItem(AccountButton choosenValue)
         {
-            if (!States.Contains(choosenValue))
-                States.Add(choosenValue);
+            if (!Buttons.Contains(choosenValue))
+                Buttons.Add(choosenValue);
         }
     }
 }

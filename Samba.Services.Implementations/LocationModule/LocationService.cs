@@ -35,12 +35,12 @@ namespace Samba.Services.Implementations.LocationModule
             {
                 if (selectedLocationScreen.PageCount > 1)
                 {
-                    return selectedLocationScreen.States
+                    return selectedLocationScreen.Buttons
                          .OrderBy(x => x.Order)
                          .Skip(selectedLocationScreen.ItemCountPerPage * currentPageNo)
                          .Take(selectedLocationScreen.ItemCountPerPage);
                 }
-                return selectedLocationScreen.States;
+                return selectedLocationScreen.Buttons;
             }
             return new List<AccountButton>();
         }
@@ -53,7 +53,7 @@ namespace Samba.Services.Implementations.LocationModule
                 _locationWorkspace.CommitChanges();
             }
             _locationWorkspace = WorkspaceFactory.Create();
-            return _locationWorkspace.Single<AccountScreen>(x => x.Name == selectedLocationScreen).States;
+            return _locationWorkspace.Single<AccountScreen>(x => x.Name == selectedLocationScreen).Buttons;
         }
 
         public void SaveLocations()
@@ -75,7 +75,7 @@ namespace Samba.Services.Implementations.LocationModule
     {
         public override string GetErrorMessage(AccountButton model)
         {
-            if (Dao.Exists<AccountScreen>(x => x.States.Any(y => y.Id == model.Id)))
+            if (Dao.Exists<AccountScreen>(x => x.Buttons.Any(y => y.Id == model.Id)))
                 return string.Format(Resources.DeleteErrorUsedBy_f, Resources.Location, Resources.LocationScreen);
             return "";
         }

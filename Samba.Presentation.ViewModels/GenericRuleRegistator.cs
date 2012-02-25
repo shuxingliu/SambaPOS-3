@@ -366,7 +366,7 @@ namespace Samba.Presentation.ViewModels
                         if (j != null)
                         {
                             if (ticket != null)
-                                PrinterService.ManualPrintTicket(ticket, j);
+                                PrinterService.ManualPrintTickets(j, ticket);
                             else
                                 PrinterService.ExecutePrintJob(j);
                         }

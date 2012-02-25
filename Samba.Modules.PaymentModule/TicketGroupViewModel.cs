@@ -89,6 +89,11 @@ namespace Samba.Modules.PaymentModule
             return Tickets.SelectMany(x => x.PaidItems);
         }
 
+        public Ticket[] GetTickets()
+        {
+            return Tickets.ToArray();
+        }
+
         public void AddPaidItems(PaidItem paidItem)
         {
             if (ContainsItems) Tickets[0].PaidItems.Add(paidItem);

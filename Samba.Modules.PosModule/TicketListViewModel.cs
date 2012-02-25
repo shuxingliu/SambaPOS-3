@@ -501,8 +501,8 @@ namespace Samba.Modules.PosModule
 
             SaveTicketIfNew();
 
-            _ticketService.UpdateTicketNumber(SelectedTicket.Model, _applicationState.CurrentDepartment.TicketTemplate.TicketNumerator);
-            _printerService.ManualPrintTicket(SelectedTicket.Model, printJob);
+            _ticketService.UpdateTicketNumbers(_applicationState.CurrentDepartment.TicketTemplate.TicketNumerator, SelectedTicket.Model);
+            _printerService.ManualPrintTickets(printJob, SelectedTicket.Model);
 
             if (printJob.WhenToPrint == (int)WhenToPrintTypes.Paid && !SelectedTicket.IsPaid)
                 MakePaymentCommand.Execute("");

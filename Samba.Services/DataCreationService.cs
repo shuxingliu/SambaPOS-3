@@ -54,12 +54,10 @@ namespace Samba.Services
             var cashAccount = new Account { AccountTemplateId = paymentAccountTemplate.Id, Name = Resources.Cash };
             var creditCardAccount = new Account { AccountTemplateId = paymentAccountTemplate.Id, Name = Resources.CreditCard };
             var voucherAccount = new Account { AccountTemplateId = paymentAccountTemplate.Id, Name = Resources.Voucher };
-            var defaultCustomerAccount = new Account { AccountTemplateId = customerAccountTemplate.Id, Name = "Customer" };
             var defaultDiscountAccount = new Account { AccountTemplateId = discountAccountTemplate.Id, Name = "Discount" };
             var defaultRoundingAccount = new Account { AccountTemplateId = discountAccountTemplate.Id, Name = Resources.Rounding };
 
             _workspace.Add(defaultSaleAccount);
-            _workspace.Add(defaultCustomerAccount);
             _workspace.Add(defaultDiscountAccount);
             _workspace.Add(defaultRoundingAccount);
             _workspace.Add(cashAccount);
@@ -71,18 +69,16 @@ namespace Samba.Services
             var discountTransactionTemplate = new AccountTransactionTemplate
             {
                 Name = "Discount Transaction",
-                SourceAccountTemplateId = customerAccountTemplate.Id,
+                SourceAccountTemplateId = locationAccountTemplate.Id,
                 TargetAccountTemplateId = discountAccountTemplate.Id,
-                DefaultSourceAccountId = defaultCustomerAccount.Id,
                 DefaultTargetAccountId = defaultDiscountAccount.Id
             };
 
             var roundingTransactionTemplate = new AccountTransactionTemplate
             {
                 Name = "Rounding Transaction",
-                SourceAccountTemplateId = customerAccountTemplate.Id,
+                SourceAccountTemplateId = locationAccountTemplate.Id,
                 TargetAccountTemplateId = discountAccountTemplate.Id,
-                DefaultSourceAccountId = defaultCustomerAccount.Id,
                 DefaultTargetAccountId = defaultRoundingAccount.Id
             };
 
@@ -90,17 +86,15 @@ namespace Samba.Services
             {
                 Name = "Sale Transaction",
                 SourceAccountTemplateId = saleAccountTemplate.Id,
-                TargetAccountTemplateId = customerAccountTemplate.Id,
+                TargetAccountTemplateId = locationAccountTemplate.Id,
                 DefaultSourceAccountId = defaultSaleAccount.Id,
-                DefaultTargetAccountId = defaultCustomerAccount.Id
             };
 
             var paymentTransactionTemplate = new AccountTransactionTemplate
             {
                 Name = "Payment Transaction",
-                SourceAccountTemplateId = customerAccountTemplate.Id,
+                SourceAccountTemplateId = locationAccountTemplate.Id,
                 TargetAccountTemplateId = paymentAccountTemplate.Id,
-                DefaultSourceAccountId = defaultCustomerAccount.Id,
                 DefaultTargetAccountId = cashAccount.Id
             };
 
@@ -307,7 +301,7 @@ namespace Samba.Services
             _workspace.Add(rule);
 
             ImportMenus(screen);
-            ImportLocations(department,locationAccountTemplate.Id);
+            ImportLocations(department, locationAccountTemplate.Id);
 
             ImportItems(BatchCreateAccounts);
             ImportItems(BatchCreateTransactionTemplates);
@@ -316,7 +310,7 @@ namespace Samba.Services
             _workspace.CommitChanges();
             _workspace.Dispose();
         }
-        
+
         private void ImportItems<T>(Func<string[], IWorkspace, IEnumerable<T>> func) where T : class
         {
             var fileName = string.Format("{0}\\Imports\\" + typeof(T).Name.ToLower() + "{1}.txt", LocalSettings.AppPath, "_" + LocalSettings.CurrentLanguage);

@@ -31,16 +31,18 @@ namespace Samba.Modules.PaymentModule
         private readonly IPrinterService _printerService;
         private readonly IUserService _userService;
         private readonly IAutomationService _automationService;
+        private readonly ITicketService _ticketService;
         private readonly ITicketGroupViewModel _ticketGroupViewModel;
 
         [ImportingConstructor]
-        public PaymentEditorViewModel(IApplicationState applicationState, IPrinterService printerService,
+        public PaymentEditorViewModel(IApplicationState applicationState, IPrinterService printerService, ITicketService ticketService,
             IUserService userService, IAutomationService automationService, ITicketGroupViewModel ticketGroupViewModel)
         {
             _applicationState = applicationState;
             _printerService = printerService;
             _userService = userService;
             _automationService = automationService;
+            _ticketService = ticketService;
             _ticketGroupViewModel = ticketGroupViewModel;
 
             _manualPrintCommand = new CaptionCommand<PrintJob>(Resources.Print, OnManualPrint, CanManualPrint);
@@ -171,8 +173,8 @@ namespace Samba.Modules.PaymentModule
 
         private void OnManualPrint(PrintJob obj)
         {
-            //_ticketService.UpdateTicketNumber(SelectedTicket, _applicationState.CurrentDepartment.TicketTemplate.TicketNumerator);
-            //_printerService.ManualPrintTicket(SelectedTicket, obj);
+            _ticketService.UpdateTicketNumbers(_applicationState.CurrentDepartment.TicketTemplate.TicketNumerator, SelectedTickets.GetTickets());
+            _printerService.ManualPrintTickets(obj, SelectedTickets.GetTickets());
         }
 
         private bool CanAutoSetDiscount(string arg)
@@ -286,10 +288,9 @@ namespace Samba.Modules.PaymentModule
             {
                 SelectedTickets.AddPaidItems(paidItem);
             }
-
             //EventServiceFactory.EventService.PublishEvent(EventTopicNames.PaymentSubmitted);
-            EventServiceFactory.EventService.PublishEvent(EventTopicNames.ActivatePosView);
             SelectedTickets.SaveTickets();
+            EventServiceFactory.EventService.PublishEvent(EventTopicNames.ActivatePosView);
             TenderedAmount = "";
             ReturningAmount = "";
             ReturningAmountVisibility = Visibility.Collapsed;

@@ -90,8 +90,8 @@ namespace Samba.Presentation.ViewModels
                 if (Model.Count() == 0) return "";
 
                 string selectedTicketTitle;
-                var m = Model.OrderByDescending(x=>x.Date).First();
-                
+                var m = Model.OrderByDescending(x => x.Date).First();
+
                 if (!string.IsNullOrEmpty(m.LocationName) && m.Id == 0)
                     selectedTicketTitle = string.Format(Resources.Location_f, m.LocationName);
                 else if (!string.IsNullOrEmpty(m.AccountName) && m.Id == 0)

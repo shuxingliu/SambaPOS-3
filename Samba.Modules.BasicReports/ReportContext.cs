@@ -166,12 +166,12 @@ namespace Samba.Modules.BasicReports
             if (CurrentWorkPeriod.StartDate == CurrentWorkPeriod.EndDate)
                 return Dao.Query<Ticket>(
                     x => x.LastPaymentDate >= CurrentWorkPeriod.StartDate,
-                    x => x.AccountTransactions.AccountTransactions,
+                    x => x.AccountDocument.AccountTransactions,
                     x => x.Payments, x => x.Calculations, x => x.Orders, x => x.Tags, x => x.Orders.Select(y => y.OrderTagValues));
 
             return Dao.Query<Ticket>(
                     x => x.LastPaymentDate >= CurrentWorkPeriod.StartDate && x.LastPaymentDate < CurrentWorkPeriod.EndDate,
-                    x => x.AccountTransactions.AccountTransactions,
+                    x => x.AccountDocument.AccountTransactions,
                     x => x.Payments, x => x.Calculations, x => x.Tags, x => x.Orders.Select(y => y.OrderTagValues));
 
         }

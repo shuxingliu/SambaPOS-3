@@ -5,7 +5,6 @@ namespace Samba.Modules.PaymentModule
 {
     public interface ITicketGroupViewModel
     {
-        List<Ticket> Tickets { get; set; }
         bool ContainsItems { get; }
         bool Locked { get; }
         decimal TotalAmount { get; }
@@ -20,6 +19,7 @@ namespace Samba.Modules.PaymentModule
         decimal GetSum();
         IEnumerable<Order> GetCalulatingOrders();
         IEnumerable<PaidItem> GetPaidItems();
+        Ticket[] GetTickets();
         void AddPaidItems(PaidItem paidItem);
         void AddPayment(PaymentTemplate paymentTemplate, decimal tenderedAmount);
         void SaveTickets();

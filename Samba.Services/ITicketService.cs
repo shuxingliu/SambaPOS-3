@@ -65,14 +65,13 @@ namespace Samba.Services
     {
         Ticket OpenTicket(int ticketId);
         //todo move to state
-        Ticket OpenTicketByLocationName(string locationName);
         Ticket OpenTicketByTicketNumber(string ticketNumber);
         TicketCommitResult CloseTicket(Ticket ticket);
         TicketCommitResult MoveOrders(Ticket ticket, IEnumerable<Order> selectedOrders, int targetTicketId);
 
         void AddPayment(Ticket ticket, PaymentTemplate template, decimal tenderedAmount);
         void PaySelectedTicket(Ticket ticket, PaymentTemplate template);
-        void UpdateTicketNumber(Ticket ticket, Numerator numerator);
+        void UpdateTicketNumbers(Numerator numerator, params Ticket[] tickets);
         void UpdateAccount(Ticket ticket, Account account);
         void RecalculateTicket(Ticket ticket);
         void RegenerateTaxRates(Ticket ticket);

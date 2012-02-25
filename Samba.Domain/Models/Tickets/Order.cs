@@ -21,6 +21,7 @@ namespace Samba.Domain.Models.Tickets
 
         public int TicketId { get; set; }
         public int MenuItemId { get; set; }
+        public int DepartmentId { get; set; }
         public string MenuItemName { get; set; }
         public string PortionName { get; set; }
         public decimal Price { get; set; }

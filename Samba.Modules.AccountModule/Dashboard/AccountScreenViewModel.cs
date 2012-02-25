@@ -17,7 +17,7 @@ namespace Samba.Modules.AccountModule.Dashboard
         private ObservableCollection<AccountButtonViewModel> _screenItems;
         public ObservableCollection<AccountButtonViewModel> ScreenItems
         {
-            get { return _screenItems ?? (_screenItems = new ObservableCollection<AccountButtonViewModel>(Model.States.Select(x => new AccountButtonViewModel(x, Model)))); }
+            get { return _screenItems ?? (_screenItems = new ObservableCollection<AccountButtonViewModel>(Model.Buttons.Select(x => new AccountButtonViewModel(x, Model)))); }
         }
 
         public string[] DisplayModes { get { return new[] { Resources.Automatic, Resources.Custom, Resources.Hidden }; } }
@@ -50,7 +50,7 @@ namespace Samba.Modules.AccountModule.Dashboard
                 string.Format(Resources.SelectLocationDialogHint_f, Model.Name), Resources.Location, Resources.Locations);
 
             ScreenItems.Clear();
-            Model.States.Clear();
+            Model.Buttons.Clear();
 
             foreach (AccountButton choosenValue in choosenValues)
             {

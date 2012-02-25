@@ -70,7 +70,7 @@ namespace Samba.Modules.AccountModule.Dashboard
             get { return SourceAccounts.SingleOrDefault(x => x.Id == SourceAccountId); }
             set
             {
-                Model.SetSoruceAccount(value.Id);
+                Model.SetSoruceAccount(value.AccountTemplateId, value.Id);
                 RaisePropertyChanged(() => SourceAccount);
             }
         }
@@ -80,7 +80,7 @@ namespace Samba.Modules.AccountModule.Dashboard
             get { return TargetAccounts.SingleOrDefault(x => x.Id == TargetAccountId); }
             set
             {
-                Model.SetTargetAccount(value.Id);
+                Model.SetTargetAccount(value.AccountTemplateId, value.Id);
                 RaisePropertyChanged(() => TargetAccount);
             }
         }

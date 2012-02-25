@@ -15,8 +15,6 @@
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid Columns="1" VerticalAlignment="Top"/>
-                    <!--<WrapPanel Orientation="Vertical" 
-                               HorizontalAlignment="Stretch" VerticalAlignment="Top"/>-->
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
 
